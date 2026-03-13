@@ -3,26 +3,14 @@
 import { useEffect, useRef, useState } from "react";
 import type { ExtractedColor, PresetPalette } from "@/types";
 import { hexToRgb } from "@/lib/colorUtils";
+import BeforeAfterSlider from "./BeforeAfterSlider";
 
 interface SitePreviewProps {
   originalColors: ExtractedColor[];
   selectedPalette: PresetPalette;
-  siteUrl: string;
   screenshot?: string;
-  onProcessed?: (dataUrl: string | null) => void;
 }
 
-type CategoryEnabled = Record<ExtractedColor["category"], boolean>;
-
-interface ColorRole {
-  label: string;
-  category: ExtractedColor["category"];
-  role: keyof PresetPalette["colors"];
-  originalColor: ExtractedColor | undefined;
-  newColor: string;
-}
-
-// 카테고리별 팔레트 색상 매핑
 const ROLE_MAP: Record<ExtractedColor["category"], keyof PresetPalette["colors"]> = {
   primary: "primary",
   secondary: "secondary",
@@ -31,39 +19,47 @@ const ROLE_MAP: Record<ExtractedColor["category"], keyof PresetPalette["colors"]
   accent: "accent",
 };
 
+const CATEGORY_LABELS: Record<ExtractedColor["category"], string> = {
+  primary: "주요색",
+  accent: "강조색",
+  secondary: "보조색",
+  background: "배경색",
+  text: "텍스트",
+};
+
 export default function SitePreview({
   originalColors,
   selectedPalette,
-  siteUrl,
   screenshot,
-  onProcessed,
 }: SitePreviewProps) {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const [processing, setProcessing] = useState(false);
-  const [canvasReady, setCanvasReady] = useState(false);
-  const [enabled, setEnabled] = useState<CategoryEnabled>({
-    primary: true, accent: true, secondary: true, background: true, text: true,
-  });
+  const [processedDataUrl, setProcessedDataUrl] = useState<string | null>(null);
 
-  const toggleCategory = (cat: ExtractedColor["category"]) => {
-    setEnabled((prev) => ({ ...prev, [cat]: !prev[cat] }));
+  // 개별 색상별 체크박스
+  const [enabledColors, setEnabledColors] = useState<Record<string, boolean>>(
+    () => Object.fromEntries(originalColors.map((c) => [c.hex, true]))
+  );
+
+  const toggleColor = (hex: string) => {
+    setEnabledColors((prev) => ({ ...prev, [hex]: !prev[hex] }));
   };
 
-  // 체크된 카테고리를 deps 키로 변환 (primitive string)
-  const enabledKey = (["primary", "accent", "secondary", "background", "text"] as const)
-    .filter((c) => enabled[c])
-    .join(",");
+  const toggleAll = (value: boolean) => {
+    setEnabledColors(Object.fromEntries(originalColors.map((c) => [c.hex, value])));
+  };
 
-  // screenshot + 팔레트 + 체크박스가 바뀔 때마다 Canvas 픽셀 치환 실행
+  const allChecked = originalColors.every((c) => enabledColors[c.hex]);
+  const enabledKey = originalColors.filter((c) => enabledColors[c.hex]).map((c) => c.hex).join(",");
+
   useEffect(() => {
     if (!screenshot) {
-      onProcessed?.(null);
+      setProcessedDataUrl(null);
       return;
     }
 
     setProcessing(true);
-    setCanvasReady(false);
-    onProcessed?.(null);
+    setProcessedDataUrl(null);
 
     const timer = setTimeout(() => {
       const img = new Image();
@@ -79,8 +75,7 @@ export default function SitePreview({
 
         ctx.drawImage(img, 0, 0);
 
-        // 체크된 카테고리의 색상만 교체
-        const activeColors = originalColors.filter((c) => enabled[c.category]);
+        const activeColors = originalColors.filter((c) => enabledColors[c.hex]);
 
         if (activeColors.length > 0) {
           const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
@@ -132,9 +127,8 @@ export default function SitePreview({
           ctx.putImageData(imageData, 0, 0);
         }
 
-        onProcessed?.(canvas.toDataURL("image/png"));
+        setProcessedDataUrl(canvas.toDataURL("image/png"));
         setProcessing(false);
-        setCanvasReady(true);
       };
       img.src = screenshot;
     }, 50);
@@ -143,81 +137,96 @@ export default function SitePreview({
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [screenshot, selectedPalette.id, enabledKey]);
 
-  // 카테고리 라벨 (한글)
-  const categoryLabels: Record<ExtractedColor["category"], string> = {
-    primary: "주요색",
-    accent: "강조색",
-    secondary: "보조색",
-    background: "배경색",
-    text: "텍스트",
-  };
-
-  const roles: ColorRole[] = (["primary", "accent", "secondary", "background", "text"] as const).map(
-    (cat) => ({
-      label: categoryLabels[cat],
-      category: cat,
-      role: ROLE_MAP[cat],
-      originalColor: originalColors.find((c) => c.category === cat),
-      newColor: selectedPalette.colors[ROLE_MAP[cat]],
-    })
-  );
-
   return (
     <div className="w-full">
       <h2 className="text-lg font-semibold text-gray-200 mb-4">
         테마 미리보기: {selectedPalette.name}
       </h2>
 
-      {/* Color mapping table */}
-      <div className="mb-6 bg-gray-800/50 rounded-xl p-4">
-        <p className="text-xs text-gray-400 mb-3">색상 매핑 — 체크한 항목만 미리보기에 적용됩니다</p>
-        <div className="space-y-2">
-          {roles.map(({ label, category, originalColor, newColor }) => {
-            const isEnabled = enabled[category];
-            return (
-              <div key={label} className={`flex items-center gap-3 transition-opacity ${isEnabled ? "" : "opacity-40"}`}>
-                <input
-                  type="checkbox"
-                  id={`swap-${category}`}
-                  checked={isEnabled}
-                  onChange={() => toggleCategory(category)}
-                  className="w-4 h-4 cursor-pointer accent-violet-500 flex-shrink-0"
-                />
+      <div className="flex gap-4 items-start">
+        {/* 좌측: 색상 매핑 패널 */}
+        <div className="w-60 flex-shrink-0 bg-gray-800/50 rounded-xl p-3 flex flex-col gap-2">
+          {/* 헤더 + 전체 선택 */}
+          <div className="flex items-center justify-between">
+            <span className="text-xs text-gray-400">색상 매핑</span>
+            <button
+              onClick={() => toggleAll(!allChecked)}
+              className="text-[10px] text-violet-400 hover:text-violet-300 transition-colors"
+            >
+              {allChecked ? "전체 해제" : "전체 선택"}
+            </button>
+          </div>
+
+          {/* 색상 목록 */}
+          <div className="space-y-1 max-h-[440px] overflow-y-auto pr-0.5">
+            {originalColors.map((color) => {
+              const newHex = selectedPalette.colors[ROLE_MAP[color.category]];
+              const isEnabled = enabledColors[color.hex];
+              return (
                 <label
-                  htmlFor={`swap-${category}`}
-                  className="text-xs text-gray-400 w-14 cursor-pointer select-none"
+                  key={color.hex}
+                  className={`flex items-center gap-1.5 cursor-pointer rounded-lg px-1.5 py-1 transition-all hover:bg-gray-700/40 ${isEnabled ? "" : "opacity-35"}`}
                 >
-                  {label}
-                </label>
-
-                <div className="flex items-center gap-1.5">
-                  <div
-                    className="w-6 h-6 rounded border border-gray-600"
-                    style={{ backgroundColor: originalColor?.hex ?? "#888" }}
+                  <input
+                    type="checkbox"
+                    checked={isEnabled}
+                    onChange={() => toggleColor(color.hex)}
+                    className="w-3 h-3 flex-shrink-0 cursor-pointer accent-violet-500"
                   />
-                  <span className="text-xs font-mono text-gray-500">
-                    {originalColor?.hex ?? "N/A"}
+                  {/* 원본 스워치 */}
+                  <div
+                    className="w-4 h-4 rounded flex-shrink-0 border border-white/10"
+                    style={{ backgroundColor: color.hex }}
+                  />
+                  <span className="text-[10px] font-mono text-gray-400 w-[52px] flex-shrink-0">
+                    {color.hex}
                   </span>
-                </div>
-
-                <svg className="w-3 h-3 text-gray-600 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 8l4 4m0 0l-4 4m4-4H3" />
-                </svg>
-
-                <div className="flex items-center gap-1.5">
+                  {/* 화살표 */}
+                  <svg className="w-2.5 h-2.5 text-gray-600 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 8l4 4m0 0l-4 4m4-4H3" />
+                  </svg>
+                  {/* 교체 스워치 */}
                   <div
-                    className="w-6 h-6 rounded border border-gray-600"
-                    style={{ backgroundColor: newColor }}
+                    className="w-4 h-4 rounded flex-shrink-0 border border-white/10"
+                    style={{ backgroundColor: newHex }}
                   />
-                  <span className="text-xs font-mono text-gray-500">{newColor}</span>
-                </div>
+                  {/* 카테고리 뱃지 */}
+                  <span className="text-[9px] text-gray-600 truncate">
+                    {CATEGORY_LABELS[color.category]}
+                  </span>
+                </label>
+              );
+            })}
+          </div>
+        </div>
+
+        {/* 우측: 비포/애프터 슬라이더 */}
+        <div className="flex-1 rounded-xl overflow-hidden border border-gray-700 relative">
+          {/* 처리 중 스피너 */}
+          {processing && (
+            <div className="absolute inset-0 z-10 flex flex-col items-center justify-center bg-gray-900/75 min-h-[200px]">
+              <div className="w-8 h-8 relative mb-2">
+                <div className="absolute inset-0 rounded-full border-4 border-gray-700" />
+                <div className="absolute inset-0 rounded-full border-4 border-violet-500 border-t-transparent animate-spin" />
               </div>
-            );
-          })}
+              <p className="text-xs text-gray-300">색상 교체 중...</p>
+            </div>
+          )}
+
+          {screenshot && processedDataUrl && !processing ? (
+            <BeforeAfterSlider
+              before={screenshot}
+              after={processedDataUrl}
+              afterLabel={selectedPalette.name}
+            />
+          ) : screenshot && !processing ? (
+            // eslint-disable-next-line @next/next/no-img-element
+            <img src={screenshot} alt="스크린샷" className="w-full h-auto block" />
+          ) : null}
         </div>
       </div>
 
-      {/* Canvas — 숨김 처리, 픽셀 연산 전용. 결과는 onProcessed 콜백으로 전달 */}
+      {/* 픽셀 연산 전용 숨김 캔버스 */}
       <canvas ref={canvasRef} className="hidden" />
     </div>
   );
