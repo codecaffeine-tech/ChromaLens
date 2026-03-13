@@ -7,68 +7,64 @@ test.describe("ChromaLens E2E", () => {
 
   test("homepage renders correctly", async ({ page }) => {
     await expect(page.getByText("ChromaLens")).toBeVisible();
-    await expect(page.getByText("Analyze any website")).toBeVisible();
-    await expect(page.getByPlaceholder(/Enter website URL/i)).toBeVisible();
-    await expect(page.getByRole("button", { name: /Analyze/i })).toBeVisible();
+    await expect(page.getByText("웹사이트 색상을 분석하세요")).toBeVisible();
+    await expect(page.getByPlaceholder(/URL 입력/i)).toBeVisible();
+    await expect(page.getByRole("button", { name: "분석" })).toBeVisible();
   });
 
   test("shows feature cards on idle state", async ({ page }) => {
-    await expect(page.getByText("Extract Colors")).toBeVisible();
-    await expect(page.getByText("Color Wheel")).toBeVisible();
-    await expect(page.getByText("Theme Preview")).toBeVisible();
+    await expect(page.getByText("색상 추출")).toBeVisible();
+    await expect(page.getByText("색상환 시각화")).toBeVisible();
+    await expect(page.getByText("테마 미리보기")).toBeVisible();
   });
 
   test("Analyze button is disabled when input is empty", async ({ page }) => {
-    const button = page.getByRole("button", { name: /Analyze/i });
+    const button = page.getByRole("button", { name: "분석" });
     await expect(button).toBeDisabled();
   });
 
   test("Analyze button enables when URL is typed", async ({ page }) => {
-    const input = page.getByPlaceholder(/Enter website URL/i);
+    const input = page.getByPlaceholder(/URL 입력/i);
     await input.fill("github.com");
-    const button = page.getByRole("button", { name: /Analyze/i });
+    const button = page.getByRole("button", { name: "분석" });
     await expect(button).toBeEnabled();
   });
 
   test("example URL buttons fill input", async ({ page }) => {
-    const githubBtn = page.getByRole("button", { name: "github.com" });
-    await githubBtn.click();
-    // After clicking, the button triggers both fill + submit
-    // Loading state should appear
-    await expect(page.getByText(/Analyzing/i)).toBeVisible({ timeout: 5000 });
+    const naver = page.getByRole("button", { name: "naver.com" });
+    await naver.click();
+    await expect(page.getByText(/분석 중/i)).toBeVisible({ timeout: 5000 });
   });
 
   test("shows loading spinner when analyzing", async ({ page }) => {
-    const input = page.getByPlaceholder(/Enter website URL/i);
+    const input = page.getByPlaceholder(/URL 입력/i);
     await input.fill("example.com");
-    await page.getByRole("button", { name: /Analyze/i }).click();
-    await expect(page.getByText(/Analyzing/i)).toBeVisible({ timeout: 5000 });
+    await page.getByRole("button", { name: "분석" }).click();
+    await expect(page.getByText(/분석 중/i)).toBeVisible({ timeout: 5000 });
   });
 
   test("shows error for invalid URL", async ({ page }) => {
-    // Mock the API to return an error
     await page.route("/api/extract", (route) =>
       route.fulfill({
         status: 400,
         contentType: "application/json",
-        body: JSON.stringify({ error: "Invalid URL format" }),
+        body: JSON.stringify({ error: "유효하지 않은 URL 형식입니다." }),
       })
     );
 
-    const input = page.getByPlaceholder(/Enter website URL/i);
+    const input = page.getByPlaceholder(/URL 입력/i);
     await input.fill("not-a-valid-url");
-    await page.getByRole("button", { name: /Analyze/i }).click();
-    await expect(page.getByText("Invalid URL format")).toBeVisible({
+    await page.getByRole("button", { name: "분석" }).click();
+    await expect(page.getByText("유효하지 않은 URL 형식입니다.")).toBeVisible({
       timeout: 10000,
     });
   });
 
   test("shows results after successful extraction", async ({ page }) => {
-    // Mock successful API response
     const mockResult = {
       url: "https://example.com",
       dominantColor: "#0066cc",
-      totalColors: 5,
+      totalColors: 4,
       extractedAt: new Date().toISOString(),
       colors: [
         {
@@ -114,22 +110,21 @@ test.describe("ChromaLens E2E", () => {
       })
     );
 
-    const input = page.getByPlaceholder(/Enter website URL/i);
+    const input = page.getByPlaceholder(/URL 입력/i);
     await input.fill("example.com");
-    await page.getByRole("button", { name: /Analyze/i }).click();
+    await page.getByRole("button", { name: "분석" }).click();
 
-    // Should show results
-    await expect(page.getByText("5 colors extracted")).toBeVisible({
+    await expect(page.getByText(/4개 색상 추출됨/)).toBeVisible({
       timeout: 10000,
     });
-    await expect(page.getByText("Extracted Colors")).toBeVisible();
+    await expect(page.getByText("추출된 색상")).toBeVisible();
   });
 
   test("tab navigation works in results view", async ({ page }) => {
     const mockResult = {
       url: "https://example.com",
       dominantColor: "#0066cc",
-      totalColors: 3,
+      totalColors: 2,
       extractedAt: new Date().toISOString(),
       colors: [
         {
@@ -159,19 +154,19 @@ test.describe("ChromaLens E2E", () => {
       })
     );
 
-    await page.getByPlaceholder(/Enter website URL/i).fill("example.com");
-    await page.getByRole("button", { name: /Analyze/i }).click();
+    await page.getByPlaceholder(/URL 입력/i).fill("example.com");
+    await page.getByRole("button", { name: "분석" }).click();
 
-    await expect(page.getByText("Extracted Colors")).toBeVisible({
+    await expect(page.getByText("추출된 색상")).toBeVisible({
       timeout: 10000,
     });
 
-    // Switch to Color Wheel tab
-    await page.getByRole("button", { name: "Color Wheel" }).click();
-    await expect(page.getByText("Color Wheel")).toBeVisible();
+    // 색상환 탭
+    await page.getByRole("button", { name: "색상환" }).click();
+    await expect(page.getByText("색상환")).toBeVisible();
 
-    // Switch to Theme Preview tab
-    await page.getByRole("button", { name: "Theme Preview" }).click();
-    await expect(page.getByText("Apply a Color Theme")).toBeVisible();
+    // 테마 미리보기 탭
+    await page.getByRole("button", { name: "테마 미리보기" }).click();
+    await expect(page.getByText("색상 테마 적용")).toBeVisible();
   });
 });
