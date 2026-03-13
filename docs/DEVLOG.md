@@ -233,10 +233,47 @@
 
 ---
 
+### Phase 10: 통합 테스트 & 성능 테스트 추가
+
+**배경**: 테스트 전략 심사에서 "단위 테스트 위주, 통합/성능 테스트 부재" 지적 → 테스트 피라미드 완성을 위해 두 계층 추가.
+
+**통합 테스트** (`tests/unit/pipeline.integration.test.ts`, 5개):
+- CSS 텍스트 → 색상 추출 → 정규화 → 병합 → `ExtractedColor[]` 전체 파이프라인 검증
+- 실제 웹사이트와 유사한 복합 CSS 입력 (`REALISTIC_CSS`) 사용
+- 검증 항목: 카테고리당 최대 5개 제한, 전체 12개 상한, `ExtractedColor` 구조 유효성, percentage 합계 ≈ 100
+- 유사 색상(파란색 3변형) 병합 확인 → 결과 수가 입력보다 적어야 함
+- `transparent` / `inherit` / `currentColor` 등 무효 값 완전 제거 검증
+- 50개 고유 색상 CSS에서도 12개 상한 유지 확인
+- 다양한 색상 포맷(`#FF0000`, `#f00`, `rgb()`, `rgba()`, `red`) → `normalizeColorString` 동일값 반환 + `aggregateColors` 단일 결과로 집계
+
+**성능 테스트** (`tests/unit/performance.test.ts`, 5개):
+- 타이밍 단언(`performance.now()`) 기반으로 실제 응답 시간 검증
+  - `aggregateColors(100)` < 50ms
+  - `aggregateColors(500)` < 200ms, 결과 ≤ 12개
+  - `extractColorsFromCss(1000 CSS 규칙)` < 100ms
+  - `groupSimilarColors(500, 임계값 25)` < 150ms
+  - `secondPassMerge(30 후보)` < 10ms
+- 대용량 입력 생성 헬퍼: `generateColors(n)` — 소수 곱셈으로 RGB 분산, `generateCss(n)` — HSL + HEX 혼합 규칙
+
+**결과**:
+- 총 단위+통합+성능 테스트: 50 → 60개 (전부 통과)
+- 커버리지 상승: Stmt 93.4% → 97.12%, Branch 81.9% → 95.07%, Func 95.2% → 95.23%
+- `vitest.config.ts` `include` 패턴이 `tests/unit/**/*.test.ts`이므로 별도 설정 변경 없이 자동 포함
+
+**완료**:
+- [x] `tests/unit/pipeline.integration.test.ts` — 5개 파이프라인 통합 테스트
+- [x] `tests/unit/performance.test.ts` — 5개 타이밍 성능 테스트
+- [x] 커버리지 임계값 전 항목 여유 있게 초과 (Stmt 97% / Branch 95%)
+
+---
+
 ## 테스트 현황
 
 | 테스트 유형 | 파일 | 결과 | 커버리지 |
 |---|---|---|---|
-| Vitest 단위 테스트 | `tests/unit/` | 50/50 통과 | Stmt 93.4% / Branch 81.9% / Func 95.2% |
+| Vitest 단위 테스트 | `tests/unit/colorExtractor.test.ts`, `colorUtils.test.ts` | 50/50 통과 | — |
+| Vitest 통합 테스트 | `tests/unit/pipeline.integration.test.ts` | 5/5 통과 | 전체 파이프라인 검증 |
+| Vitest 성능 테스트 | `tests/unit/performance.test.ts` | 5/5 통과 | 타이밍 단언 |
+| **전체 단위 합계** | `tests/unit/` | **60/60 통과** | Stmt 97.12% / Branch 95.07% / Func 95.23% |
 | Playwright E2E | `tests/e2e/main.spec.ts` | 11/11 통과 | 핵심 사용자 흐름 전체 커버 |
 | CI/CD (GitHub Actions) | `.github/workflows/ci.yml` | lint → typecheck → unit → E2E → build → deploy-check |
