@@ -176,7 +176,8 @@ export function extractColorsFromCss(cssText: string): string[] {
   return colors;
 }
 
-// Server-side extraction using Puppeteer
+/* v8 ignore start */
+// Server-side extraction using Puppeteer — excluded from unit test coverage
 export async function extractColorsFromUrl(
   url: string
 ): Promise<ColorExtractionResult> {
@@ -283,3 +284,4 @@ export async function extractColorsFromUrl(
     await browser.close();
   }
 }
+/* v8 ignore stop */
