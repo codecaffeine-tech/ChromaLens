@@ -10,10 +10,14 @@ interface SitePreviewProps {
   selectedPalette: PresetPalette;
   siteUrl: string;
   screenshot?: string;
+  onProcessed?: (dataUrl: string | null) => void;
 }
+
+type CategoryEnabled = Record<ExtractedColor["category"], boolean>;
 
 interface ColorRole {
   label: string;
+  category: ExtractedColor["category"];
   role: keyof PresetPalette["colors"];
   originalColor: ExtractedColor | undefined;
   newColor: string;
@@ -33,19 +37,35 @@ export default function SitePreview({
   selectedPalette,
   siteUrl,
   screenshot,
+  onProcessed,
 }: SitePreviewProps) {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const [processing, setProcessing] = useState(false);
   const [canvasReady, setCanvasReady] = useState(false);
+  const [enabled, setEnabled] = useState<CategoryEnabled>({
+    primary: true, accent: true, secondary: true, background: true, text: true,
+  });
 
-  // screenshot + 선택된 팔레트가 바뀔 때마다 Canvas 픽셀 치환 실행
+  const toggleCategory = (cat: ExtractedColor["category"]) => {
+    setEnabled((prev) => ({ ...prev, [cat]: !prev[cat] }));
+  };
+
+  // 체크된 카테고리를 deps 키로 변환 (primitive string)
+  const enabledKey = (["primary", "accent", "secondary", "background", "text"] as const)
+    .filter((c) => enabled[c])
+    .join(",");
+
+  // screenshot + 팔레트 + 체크박스가 바뀔 때마다 Canvas 픽셀 치환 실행
   useEffect(() => {
-    if (!screenshot) return;
+    if (!screenshot) {
+      onProcessed?.(null);
+      return;
+    }
 
     setProcessing(true);
     setCanvasReady(false);
+    onProcessed?.(null);
 
-    // 스피너가 렌더링된 후 무거운 작업 실행
     const timer = setTimeout(() => {
       const img = new Image();
       img.onload = () => {
@@ -59,55 +79,61 @@ export default function SitePreview({
         if (!ctx) return;
 
         ctx.drawImage(img, 0, 0);
-        const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
-        const data = imageData.data;
 
-        // 원본 색상 → 교체 색상 룩업 플랫 배열 (r,g,b, newR,newG,newB 순)
-        // 빠른 루프를 위해 객체 대신 typed array 사용
-        const numColors = originalColors.length;
-        const colorData = new Int32Array(numColors * 6);
-        for (let i = 0; i < numColors; i++) {
-          const c = originalColors[i];
-          const newHex = selectedPalette.colors[ROLE_MAP[c.category]];
-          const newRgb = hexToRgb(newHex);
-          colorData[i * 6 + 0] = c.rgb.r;
-          colorData[i * 6 + 1] = c.rgb.g;
-          colorData[i * 6 + 2] = c.rgb.b;
-          colorData[i * 6 + 3] = newRgb.r;
-          colorData[i * 6 + 4] = newRgb.g;
-          colorData[i * 6 + 5] = newRgb.b;
-        }
+        // 체크된 카테고리의 색상만 교체
+        const activeColors = originalColors.filter((c) => enabled[c.category]);
 
-        const THRESHOLD_SQ = 40 * 40; // 단순 유클리드 제곱 거리 임계값
+        if (activeColors.length > 0) {
+          const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
+          const data = imageData.data;
 
-        for (let i = 0; i < data.length; i += 4) {
-          const r = data[i];
-          const g = data[i + 1];
-          const b = data[i + 2];
+          const numColors = activeColors.length;
+          const colorData = new Int32Array(numColors * 6);
+          for (let i = 0; i < numColors; i++) {
+            const c = activeColors[i];
+            const newHex = selectedPalette.colors[ROLE_MAP[c.category]];
+            const newRgb = hexToRgb(newHex);
+            colorData[i * 6 + 0] = c.rgb.r;
+            colorData[i * 6 + 1] = c.rgb.g;
+            colorData[i * 6 + 2] = c.rgb.b;
+            colorData[i * 6 + 3] = newRgb.r;
+            colorData[i * 6 + 4] = newRgb.g;
+            colorData[i * 6 + 5] = newRgb.b;
+          }
 
-          let bestDistSq = Infinity;
-          let bestOffset = -1;
+          const THRESHOLD_SQ = 40 * 40;
 
-          for (let j = 0; j < numColors; j++) {
-            const base = j * 6;
-            const dr = r - colorData[base];
-            const dg = g - colorData[base + 1];
-            const db = b - colorData[base + 2];
-            const distSq = dr * dr + dg * dg + db * db;
-            if (distSq < bestDistSq) {
-              bestDistSq = distSq;
-              bestOffset = base;
+          for (let i = 0; i < data.length; i += 4) {
+            const r = data[i];
+            const g = data[i + 1];
+            const b = data[i + 2];
+
+            let bestDistSq = Infinity;
+            let bestOffset = -1;
+
+            for (let j = 0; j < numColors; j++) {
+              const base = j * 6;
+              const dr = r - colorData[base];
+              const dg = g - colorData[base + 1];
+              const db = b - colorData[base + 2];
+              const distSq = dr * dr + dg * dg + db * db;
+              if (distSq < bestDistSq) {
+                bestDistSq = distSq;
+                bestOffset = base;
+              }
+            }
+
+            if (bestDistSq <= THRESHOLD_SQ && bestOffset >= 0) {
+              data[i] = colorData[bestOffset + 3];
+              data[i + 1] = colorData[bestOffset + 4];
+              data[i + 2] = colorData[bestOffset + 5];
             }
           }
 
-          if (bestDistSq <= THRESHOLD_SQ && bestOffset >= 0) {
-            data[i] = colorData[bestOffset + 3];
-            data[i + 1] = colorData[bestOffset + 4];
-            data[i + 2] = colorData[bestOffset + 5];
-          }
+          ctx.putImageData(imageData, 0, 0);
         }
 
-        ctx.putImageData(imageData, 0, 0);
+        onProcessed?.(canvas.toDataURL("image/png"));
         setProcessing(false);
         setCanvasReady(true);
       };
@@ -115,7 +141,8 @@ export default function SitePreview({
     }, 50);
 
     return () => clearTimeout(timer);
-  }, [screenshot, selectedPalette.id, originalColors]);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [screenshot, selectedPalette.id, enabledKey]);
 
   // 카테고리 라벨 (한글)
   const categoryLabels: Record<ExtractedColor["category"], string> = {
@@ -129,6 +156,7 @@ export default function SitePreview({
   const roles: ColorRole[] = (["primary", "accent", "secondary", "background", "text"] as const).map(
     (cat) => ({
       label: categoryLabels[cat],
+      category: cat,
       role: ROLE_MAP[cat],
       originalColor: originalColors.find((c) => c.category === cat),
       newColor: selectedPalette.colors[ROLE_MAP[cat]],
@@ -143,35 +171,50 @@ export default function SitePreview({
 
       {/* Color mapping table */}
       <div className="mb-6 bg-gray-800/50 rounded-xl p-4">
-        <p className="text-xs text-gray-400 mb-3">색상 매핑</p>
+        <p className="text-xs text-gray-400 mb-3">색상 매핑 — 체크한 항목만 미리보기에 적용됩니다</p>
         <div className="space-y-2">
-          {roles.map(({ label, originalColor, newColor }) => (
-            <div key={label} className="flex items-center gap-3">
-              <span className="text-xs text-gray-400 w-16">{label}</span>
-
-              <div className="flex items-center gap-1.5">
-                <div
-                  className="w-6 h-6 rounded border border-gray-600"
-                  style={{ backgroundColor: originalColor?.hex ?? "#888" }}
+          {roles.map(({ label, category, originalColor, newColor }) => {
+            const isEnabled = enabled[category];
+            return (
+              <div key={label} className={`flex items-center gap-3 transition-opacity ${isEnabled ? "" : "opacity-40"}`}>
+                <input
+                  type="checkbox"
+                  id={`swap-${category}`}
+                  checked={isEnabled}
+                  onChange={() => toggleCategory(category)}
+                  className="w-4 h-4 cursor-pointer accent-violet-500 flex-shrink-0"
                 />
-                <span className="text-xs font-mono text-gray-500">
-                  {originalColor?.hex ?? "N/A"}
-                </span>
-              </div>
+                <label
+                  htmlFor={`swap-${category}`}
+                  className="text-xs text-gray-400 w-14 cursor-pointer select-none"
+                >
+                  {label}
+                </label>
 
-              <svg className="w-3 h-3 text-gray-600 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 8l4 4m0 0l-4 4m4-4H3" />
-              </svg>
+                <div className="flex items-center gap-1.5">
+                  <div
+                    className="w-6 h-6 rounded border border-gray-600"
+                    style={{ backgroundColor: originalColor?.hex ?? "#888" }}
+                  />
+                  <span className="text-xs font-mono text-gray-500">
+                    {originalColor?.hex ?? "N/A"}
+                  </span>
+                </div>
 
-              <div className="flex items-center gap-1.5">
-                <div
-                  className="w-6 h-6 rounded border border-gray-600"
-                  style={{ backgroundColor: newColor }}
-                />
-                <span className="text-xs font-mono text-gray-500">{newColor}</span>
+                <svg className="w-3 h-3 text-gray-600 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 8l4 4m0 0l-4 4m4-4H3" />
+                </svg>
+
+                <div className="flex items-center gap-1.5">
+                  <div
+                    className="w-6 h-6 rounded border border-gray-600"
+                    style={{ backgroundColor: newColor }}
+                  />
+                  <span className="text-xs font-mono text-gray-500">{newColor}</span>
+                </div>
               </div>
-            </div>
-          ))}
+            );
+          })}
         </div>
       </div>
 
