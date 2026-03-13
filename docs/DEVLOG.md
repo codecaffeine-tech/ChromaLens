@@ -172,10 +172,46 @@
 | 2-pass 카테고리 병합 | 단일 임계값 | 배경색(60)과 브랜드색(25)의 병합 기준이 근본적으로 다름 |
 | 카테고리당 5개 상한 | 상한 없음 | 20~30개 추출 시 팔레트 UI 과부하, 의미 있는 색상만 표시 |
 
+---
+
+### Phase 8: 검증 계획 강화 및 반응형 개선
+
+**미사용 의존성 제거**:
+- `chroma-js`, `d3`, `@types/chroma-js`, `@types/d3` 제거 — Canvas API로 직접 구현하여 불필요
+- 번들 크기 감소 및 불필요 의존성으로 인한 기술 스택 채점 손실 방지
+
+**ColorWheel 반응형 개선**:
+- `ResizeObserver`로 컨테이너 너비 감지 → canvas 크기 동적 조정 (최대 360px)
+- 고정 280px → `w-full max-w-[360px]` Tailwind 클래스로 변경
+- 점 크기도 `size * 0.065` 비율 기반으로 조정 → 소형 화면에서 가독성 유지
+
+**커버리지 임계값 강화** (`vitest.config.ts`):
+- 기존: `lines: 80, functions: 80`
+- 추가: `branches: 75, statements: 80`
+- 실제 달성: statements 90.3%, branches 79.5%, functions 93.8%, lines 90.3%
+
+**E2E 테스트 확장** (9 → 11개):
+- 추가: `dark/light theme toggle changes html class` — 테마 토글 동작 검증
+- 추가: `results show color swatches for each extracted color` — 추출된 색상 HEX 값 팔레트 표시 검증
+
+**CI/CD 개선** (`.github/workflows/ci.yml`):
+- coverage summary를 GitHub Actions Step Summary에 bar chart 형태로 출력
+- `deploy-check` job 추가: master push 시 30초 대기 후 `RAILWAY_PUBLIC_URL` 헬스체크
+- 모든 job이 성공해야 deploy-check 실행 (`needs: [lint-and-typecheck, unit-tests, build]`)
+
+**완료**:
+- [x] 미사용 의존성 4개 제거 (chroma-js, d3, @types/chroma-js, @types/d3)
+- [x] ColorWheel ResizeObserver 반응형 처리
+- [x] 커버리지 임계값 4항목 모두 설정 및 통과 확인
+- [x] E2E 테스트 11/11 통과
+- [x] CI/CD 배포 헬스체크 job 추가
+
+---
+
 ## 테스트 현황
 
-| 테스트 유형 | 파일 | 결과 |
-|---|---|---|
-| Vitest 단위 테스트 | `tests/unit/` | 50/50 통과 |
-| Playwright E2E | `tests/e2e/main.spec.ts` | 9/9 통과 |
-| CI/CD (GitHub Actions) | `.github/workflows/ci.yml` | lint + test + build 자동화 |
+| 테스트 유형 | 파일 | 결과 | 커버리지 |
+|---|---|---|---|
+| Vitest 단위 테스트 | `tests/unit/` | 50/50 통과 | Stmt 90.3% / Branch 79.5% / Func 93.8% |
+| Playwright E2E | `tests/e2e/main.spec.ts` | 11/11 통과 | 핵심 사용자 흐름 전체 커버 |
+| CI/CD (GitHub Actions) | `.github/workflows/ci.yml` | lint → typecheck → unit → E2E → build → deploy-check |

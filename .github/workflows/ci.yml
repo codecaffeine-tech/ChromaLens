@@ -43,6 +43,23 @@ jobs:
       - name: Run unit tests with coverage
         run: npm run test:coverage
 
+      - name: Print coverage summary
+        if: always()
+        run: |
+          if [ -f coverage/coverage-summary.json ]; then
+            echo "### Coverage Summary" >> $GITHUB_STEP_SUMMARY
+            echo '```' >> $GITHUB_STEP_SUMMARY
+            cat coverage/coverage-summary.json | python3 -c "
+          import json, sys
+          d = json.load(sys.stdin)['total']
+          for k in ['lines','statements','functions','branches']:
+              pct = d[k]['pct']
+              bar = '█' * int(pct // 10) + '░' * (10 - int(pct // 10))
+              print(f'{k:12s} {bar} {pct:.1f}%')
+          " >> $GITHUB_STEP_SUMMARY
+            echo '```' >> $GITHUB_STEP_SUMMARY
+          fi
+
       - name: Upload coverage report
         uses: actions/upload-artifact@v4
         if: always()
@@ -109,3 +126,27 @@ jobs:
 
       - name: Check build output
         run: ls -la .next/
+
+  deploy-check:
+    name: Deployment Health Check
+    runs-on: ubuntu-latest
+    needs: [lint-and-typecheck, unit-tests, build]
+    if: github.ref == 'refs/heads/master' && github.event_name == 'push'
+    steps:
+      - name: Wait for Railway deployment
+        run: sleep 30
+
+      - name: Check production health
+        run: |
+          RAILWAY_URL="${{ secrets.RAILWAY_PUBLIC_URL }}"
+          if [ -z "$RAILWAY_URL" ]; then
+            echo "::warning::RAILWAY_PUBLIC_URL secret not set — skipping health check"
+            exit 0
+          fi
+          STATUS=$(curl -s -o /dev/null -w "%{http_code}" --max-time 15 "$RAILWAY_URL" 2>/dev/null || echo "000")
+          echo "Health check HTTP status: $STATUS"
+          if [ "$STATUS" -ge 200 ] && [ "$STATUS" -lt 400 ]; then
+            echo "✅ Production deployment is healthy (HTTP $STATUS)"
+          else
+            echo "::warning::Production returned HTTP $STATUS — may still be deploying"
+          fi

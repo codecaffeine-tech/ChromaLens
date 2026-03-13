@@ -120,6 +120,71 @@ test.describe("ChromaLens E2E", () => {
     await expect(page.getByText("추출된 색상")).toBeVisible();
   });
 
+  test("dark/light theme toggle changes html class", async ({ page }) => {
+    const html = page.locator("html");
+    // default is dark
+    await expect(html).toHaveClass(/dark/);
+
+    await page.getByRole("button", { name: /테마|다크|라이트/i }).click();
+    await expect(html).not.toHaveClass(/dark/);
+
+    await page.getByRole("button", { name: /테마|다크|라이트/i }).click();
+    await expect(html).toHaveClass(/dark/);
+  });
+
+  test("results show color swatches for each extracted color", async ({ page }) => {
+    const mockResult = {
+      url: "https://example.com",
+      dominantColor: "#0066cc",
+      totalColors: 3,
+      extractedAt: new Date().toISOString(),
+      colors: [
+        {
+          hex: "#0066cc",
+          rgb: { r: 0, g: 102, b: 204 },
+          hsl: { h: 210, s: 100, l: 40 },
+          frequency: 50,
+          percentage: 50,
+          category: "primary",
+        },
+        {
+          hex: "#ffffff",
+          rgb: { r: 255, g: 255, b: 255 },
+          hsl: { h: 0, s: 0, l: 100 },
+          frequency: 30,
+          percentage: 30,
+          category: "background",
+        },
+        {
+          hex: "#111111",
+          rgb: { r: 17, g: 17, b: 17 },
+          hsl: { h: 0, s: 0, l: 7 },
+          frequency: 20,
+          percentage: 20,
+          category: "text",
+        },
+      ],
+    };
+
+    await page.route("/api/extract", (route) =>
+      route.fulfill({
+        status: 200,
+        contentType: "application/json",
+        body: JSON.stringify(mockResult),
+      })
+    );
+
+    await page.getByPlaceholder(/URL 입력/i).fill("example.com");
+    await page.getByRole("button", { name: "분석" }).click();
+
+    await expect(page.getByText(/3개 색상 추출됨/)).toBeVisible({ timeout: 10000 });
+
+    // 팔레트 탭이 기본 — 색상 HEX 값이 보여야 함
+    await expect(page.getByText(/#0066cc/i)).toBeVisible();
+    await expect(page.getByText(/#ffffff/i)).toBeVisible();
+    await expect(page.getByText(/#111111/i)).toBeVisible();
+  });
+
   test("tab navigation works in results view", async ({ page }) => {
     const mockResult = {
       url: "https://example.com",
