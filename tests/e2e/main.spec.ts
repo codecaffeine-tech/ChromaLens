@@ -6,7 +6,7 @@ test.describe("ChromaLens E2E", () => {
   });
 
   test("homepage renders correctly", async ({ page }) => {
-    await expect(page.getByText("ChromaLens")).toBeVisible();
+    await expect(page.getByRole("heading", { name: "ChromaLens" })).toBeVisible();
     await expect(page.getByText("웹사이트 색상을 분석하세요")).toBeVisible();
     await expect(page.getByPlaceholder(/URL 입력/i)).toBeVisible();
     await expect(page.getByRole("button", { name: "분석" })).toBeVisible();
@@ -163,7 +163,7 @@ test.describe("ChromaLens E2E", () => {
 
     // 색상환 탭
     await page.getByRole("button", { name: "색상환" }).click();
-    await expect(page.getByText("색상환")).toBeVisible();
+    await expect(page.getByRole("heading", { name: "색상환" })).toBeVisible();
 
     // 테마 미리보기 탭
     await page.getByRole("button", { name: "테마 미리보기" }).click();
