@@ -208,6 +208,56 @@ export function groupSimilarColors(
   return groups;
 }
 
+// Category-specific thresholds for second-pass merge
+const SECOND_PASS_THRESHOLDS: Record<string, number> = {
+  background: 60, // near-whites and near-blacks merge aggressively
+  text: 60,
+  secondary: 50, // grays merge moderately
+  primary: 35,
+  accent: 25,    // brand colors stay distinct
+};
+
+/**
+ * Second-pass merge: after initial grouping, further consolidate colors
+ * within the same category using looser per-category thresholds.
+ * Reduces near-duplicate neutrals while preserving distinct brand colors.
+ */
+export function secondPassMerge(
+  candidates: { color: string; count: number }[],
+  allColors: string[]
+): { color: string; count: number }[] {
+  const categorized = candidates.map(({ color, count }) => ({
+    color,
+    count,
+    rgb: hexToRgb(color),
+    category: categorizeColor(color, allColors),
+  }));
+
+  const result: { color: string; count: number }[] = [];
+  const assigned = new Set<string>();
+
+  for (const item of categorized) {
+    if (assigned.has(item.color)) continue;
+
+    let totalCount = item.count;
+    assigned.add(item.color);
+    const threshold = SECOND_PASS_THRESHOLDS[item.category] ?? 35;
+
+    for (const other of categorized) {
+      if (assigned.has(other.color)) continue;
+      if (other.category !== item.category) continue;
+      if (colorDistance(item.rgb, other.rgb) < threshold) {
+        totalCount += other.count;
+        assigned.add(other.color);
+      }
+    }
+
+    result.push({ color: item.color, count: totalCount });
+  }
+
+  return result.sort((a, b) => b.count - a.count);
+}
+
 export function formatColor(
   color: ExtractedColor,
   format: ColorFormat

@@ -4,6 +4,7 @@ import {
   hexToRgb,
   rgbToHsl,
   groupSimilarColors,
+  secondPassMerge,
   isNearlyTransparent,
   categorizeColor,
 } from "./colorUtils";
@@ -117,10 +118,13 @@ export function aggregateColors(rawColors: string[]): ExtractedColor[] {
 
   const total = Array.from(mergedMap.values()).reduce((a, b) => a + b, 0);
 
-  const sorted: RawColorData[] = Array.from(mergedMap.entries())
+  // Take top 30 candidates, run second-pass category-aware merge, cap at 12
+  const candidates = Array.from(mergedMap.entries())
     .sort((a, b) => b[1] - a[1])
-    .slice(0, 20)
+    .slice(0, 30)
     .map(([color, count]) => ({ color, count }));
+
+  const sorted = secondPassMerge(candidates, uniqueColors).slice(0, 12);
 
   return sorted.map(({ color, count }) => {
     const rgb = hexToRgb(color);
