@@ -63,15 +63,15 @@ export default function BeforeAfterSlider({
         </div>
       </div>
 
-      {/* 레이블 */}
-      <span className="absolute top-3 left-3 text-xs font-medium text-white bg-black/50 px-2 py-1 rounded-full pointer-events-none">
-        원본
-      </span>
+      {/* 레이블 — 왼쪽=수정본(after), 오른쪽=원본(before) */}
       {afterLabel && (
-        <span className="absolute top-3 right-3 text-xs font-medium text-white bg-violet-600/80 px-2 py-1 rounded-full pointer-events-none">
+        <span className="absolute top-3 left-3 text-xs font-medium text-white bg-violet-600/80 px-2 py-1 rounded-full pointer-events-none">
           {afterLabel}
         </span>
       )}
+      <span className="absolute top-3 right-3 text-xs font-medium text-white bg-black/50 px-2 py-1 rounded-full pointer-events-none">
+        원본
+      </span>
     </div>
   );
 }
