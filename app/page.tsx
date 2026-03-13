@@ -7,6 +7,7 @@ import ColorPalette from "@/components/ColorPalette";
 import ColorWheel from "@/components/ColorWheel";
 import PaletteSelector from "@/components/PaletteSelector";
 import SitePreview from "@/components/SitePreview";
+import BeforeAfterSlider from "@/components/BeforeAfterSlider";
 
 type AppState = "idle" | "loading" | "success" | "error";
 
@@ -142,13 +143,20 @@ export default function HomePage() {
               </div>
               {result.screenshot && (
                 <div className="border-t border-gray-700/50">
-                  {/* eslint-disable-next-line @next/next/no-img-element */}
-                  <img
-                    src={activeTab === "preview" && processedScreenshot ? processedScreenshot : result.screenshot}
-                    alt={`${result.url} 스크린샷`}
-                    className="w-full object-cover object-top max-h-[480px]"
-                    style={{ imageRendering: "auto" }}
-                  />
+                  {activeTab === "preview" && processedScreenshot ? (
+                    <BeforeAfterSlider
+                      before={result.screenshot}
+                      after={processedScreenshot}
+                      afterLabel={selectedPalette?.name}
+                    />
+                  ) : (
+                    // eslint-disable-next-line @next/next/no-img-element
+                    <img
+                      src={result.screenshot}
+                      alt={`${result.url} 스크린샷`}
+                      className="w-full object-cover object-top max-h-[480px]"
+                    />
+                  )}
                 </div>
               )}
             </div>

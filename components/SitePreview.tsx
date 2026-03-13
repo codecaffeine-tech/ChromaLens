@@ -3,7 +3,6 @@
 import { useEffect, useRef, useState } from "react";
 import type { ExtractedColor, PresetPalette } from "@/types";
 import { hexToRgb } from "@/lib/colorUtils";
-import { getContrastColor } from "@/lib/colorUtils";
 
 interface SitePreviewProps {
   originalColors: ExtractedColor[];
@@ -218,58 +217,8 @@ export default function SitePreview({
         </div>
       </div>
 
-      {/* Canvas 스크린샷 미리보기 */}
-      {screenshot && (
-        <div className="rounded-xl overflow-hidden border border-gray-700 shadow-2xl relative">
-          {/* 처리 중 오버레이 */}
-          {processing && (
-            <div className="absolute inset-0 z-10 flex flex-col items-center justify-center bg-gray-900/80">
-              <div className="w-10 h-10 relative mb-3">
-                <div className="absolute inset-0 rounded-full border-4 border-gray-700" />
-                <div className="absolute inset-0 rounded-full border-4 border-violet-500 border-t-transparent animate-spin" />
-              </div>
-              <p className="text-sm text-gray-300">색상 교체 중...</p>
-            </div>
-          )}
-          <canvas
-            ref={canvasRef}
-            className="w-full h-auto block"
-            style={{ display: canvasReady || processing ? "block" : "none" }}
-          />
-          {/* 처리 전 원본 이미지 (canvas 준비되기 전까지 표시) */}
-          {!canvasReady && !processing && (
-            // eslint-disable-next-line @next/next/no-img-element
-            <img
-              src={screenshot}
-              alt="스크린샷"
-              className="w-full h-auto block"
-            />
-          )}
-        </div>
-      )}
-
-      {/* screenshot 없을 때 Mock UI fallback */}
-      {!screenshot && (
-        <div
-          className="rounded-xl overflow-hidden border border-gray-700 shadow-2xl"
-          style={{ backgroundColor: selectedPalette.colors.background }}
-        >
-          <div
-            className="px-4 py-3 flex items-center gap-2"
-            style={{ backgroundColor: selectedPalette.colors.primary }}
-          >
-            <div className="w-5 h-5 rounded" style={{ backgroundColor: selectedPalette.colors.accent }} />
-            <span className="text-sm font-semibold" style={{ color: getContrastColor(selectedPalette.colors.primary) }}>
-              {new URL(siteUrl.startsWith("http") ? siteUrl : "https://" + siteUrl).hostname}
-            </span>
-          </div>
-          <div className="px-6 py-8">
-            <p className="text-sm" style={{ color: selectedPalette.colors.text }}>
-              <strong>{selectedPalette.name}</strong> 테마 미리보기
-            </p>
-          </div>
-        </div>
-      )}
+      {/* Canvas — 숨김 처리, 픽셀 연산 전용. 결과는 onProcessed 콜백으로 전달 */}
+      <canvas ref={canvasRef} className="hidden" />
     </div>
   );
 }
