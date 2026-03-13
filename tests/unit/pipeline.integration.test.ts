@@ -157,7 +157,7 @@ describe("색상 추출 파이프라인 통합 테스트", () => {
     const normalized = formats.map(normalizeColorString);
     const unique = new Set(normalized.filter(Boolean));
     expect(unique.size).toBe(1);
-    expect([...unique][0]).toBe("#ff0000");
+    expect(Array.from(unique)[0]).toBe("#ff0000");
 
     // aggregateColors도 이들을 하나로 합쳐야 함
     const result = aggregateColors(formats);
