@@ -208,10 +208,35 @@
 
 ---
 
+### Phase 9: CI/CD 안정화 및 커버리지 갭 해소
+
+**GitHub Actions Node.js 24 대응**:
+- `actions/checkout`, `setup-node`, `upload-artifact` v4 → v5 업그레이드
+- v5 기준 checkout/setup-node는 Node.js 24 네이티브 지원 → 경고 완전 제거
+- `upload-artifact@v5` 는 Node.js 24 미지원으로 아티팩트 업로드 step 제거
+  - 커버리지 요약은 GitHub Actions Step Summary에 계속 출력 (upload 없이도 확인 가능)
+
+**Railway 헬스체크 실제 연결**:
+- GitHub Secret `RAILWAY_PUBLIC_URL` 등록 → `deploy-check` job에서 실제 배포 URL 헬스체크 동작
+- 배포 URL: `https://chromalens-production.up.railway.app`
+
+**colorExtractor.ts 커버리지 갭 해소**:
+- 문제: `vitest.config.ts`에서 `colorExtractor.ts` 전체를 exclude → 20개 테스트가 있음에도 커버리지 미반영
+- 원인 분석: Puppeteer I/O가 필요한 것은 `extractColorsFromUrl` 단 하나이며, 나머지 4개 함수(`resolveNamedColor`, `normalizeColorString`, `aggregateColors`, `extractColorsFromCss`)는 순수 함수로 완전히 테스트 가능
+- 해결: `extractColorsFromUrl`에만 `/* v8 ignore start/stop */` 마킹 → 파일 전체 제외에서 함수 단위 제외로 전환
+- 결과: `colorExtractor.ts` 커버리지 stmt 98.9% / func 100% 달성
+
+**완료**:
+- [x] CI actions v5 업그레이드, Node.js 20 deprecation 경고 제거
+- [x] Railway 헬스체크 실제 URL 연결 및 CI에서 프로덕션 배포 검증 자동화
+- [x] colorExtractor.ts 커버리지 포함 (순수 함수 98.9%, Puppeteer 함수만 명시적 제외)
+
+---
+
 ## 테스트 현황
 
 | 테스트 유형 | 파일 | 결과 | 커버리지 |
 |---|---|---|---|
-| Vitest 단위 테스트 | `tests/unit/` | 50/50 통과 | Stmt 90.3% / Branch 79.5% / Func 93.8% |
+| Vitest 단위 테스트 | `tests/unit/` | 50/50 통과 | Stmt 93.4% / Branch 81.9% / Func 95.2% |
 | Playwright E2E | `tests/e2e/main.spec.ts` | 11/11 통과 | 핵심 사용자 흐름 전체 커버 |
 | CI/CD (GitHub Actions) | `.github/workflows/ci.yml` | lint → typecheck → unit → E2E → build → deploy-check |
