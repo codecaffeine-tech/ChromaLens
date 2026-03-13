@@ -260,12 +260,21 @@ export async function extractColorsFromUrl(
     const colors = aggregateColors(allRawColors);
     const dominantColor = colors[0]?.hex ?? "#000000";
 
+    // 사이트 스크린샷 캡처 (JPEG, 품질 60%)
+    const screenshotBuffer = await page.screenshot({
+      type: "jpeg",
+      quality: 60,
+      clip: { x: 0, y: 0, width: 1280, height: 720 },
+    });
+    const screenshot = `data:image/jpeg;base64,${Buffer.from(screenshotBuffer).toString("base64")}`;
+
     return {
       url,
       colors,
       totalColors: colors.length,
       extractedAt: new Date().toISOString(),
       dominantColor,
+      screenshot,
     };
   } finally {
     await browser.close();

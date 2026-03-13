@@ -126,16 +126,29 @@ export default function HomePage() {
         {/* Success state */}
         {state === "success" && result && (
           <div className="space-y-8">
-            {/* Site info bar */}
-            <div className="flex items-center gap-3 bg-gray-800/50 rounded-xl px-4 py-3">
-              <div
-                className="w-4 h-4 rounded-full flex-shrink-0"
-                style={{ backgroundColor: result.dominantColor }}
-              />
-              <span className="text-sm text-gray-300 truncate">{result.url}</span>
-              <span className="text-xs text-gray-500 ml-auto flex-shrink-0">
-                {result.totalColors}개 색상 추출됨
-              </span>
+            {/* Site info bar + screenshot */}
+            <div className="bg-gray-800/50 rounded-xl overflow-hidden border border-gray-700/50">
+              <div className="flex items-center gap-3 px-4 py-3">
+                <div
+                  className="w-3 h-3 rounded-full flex-shrink-0"
+                  style={{ backgroundColor: result.dominantColor }}
+                />
+                <span className="text-sm text-gray-300 truncate">{result.url}</span>
+                <span className="text-xs text-gray-500 ml-auto flex-shrink-0">
+                  {result.totalColors}개 색상 추출됨
+                </span>
+              </div>
+              {result.screenshot && (
+                <div className="border-t border-gray-700/50">
+                  {/* eslint-disable-next-line @next/next/no-img-element */}
+                  <img
+                    src={result.screenshot}
+                    alt={`${result.url} 스크린샷`}
+                    className="w-full object-cover object-top max-h-64"
+                    style={{ imageRendering: "auto" }}
+                  />
+                </div>
+              )}
             </div>
 
             {/* Tabs */}
