@@ -9,8 +9,8 @@ interface ColorPaletteProps {
 }
 
 const CATEGORY_ORDER: ExtractedColor["category"][] = [
-  "accent",
   "primary",
+  "accent",
   "secondary",
   "background",
   "text",

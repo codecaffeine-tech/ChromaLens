@@ -144,7 +144,7 @@ export default function HomePage() {
                   <img
                     src={result.screenshot}
                     alt={`${result.url} 스크린샷`}
-                    className="w-full object-cover object-top max-h-64"
+                    className="w-full object-cover object-top max-h-[480px]"
                     style={{ imageRendering: "auto" }}
                   />
                 </div>
@@ -196,6 +196,7 @@ export default function HomePage() {
                     originalColors={result.colors}
                     selectedPalette={selectedPalette}
                     siteUrl={result.url}
+                    screenshot={result.screenshot}
                   />
                 )}
               </div>

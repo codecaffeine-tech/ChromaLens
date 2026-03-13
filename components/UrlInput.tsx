@@ -9,10 +9,9 @@ interface UrlInputProps {
 
 const EXAMPLE_URLS = [
   "naver.com",
-  "kakao.com",
-  "coupang.com",
   "toss.im",
   "samsung.com",
+  "www.ubcare.co.kr",
 ];
 
 export default function UrlInput({ onSubmit, isLoading }: UrlInputProps) {

@@ -1,13 +1,15 @@
 "use client";
 
+import { useEffect, useRef, useState } from "react";
 import type { ExtractedColor, PresetPalette } from "@/types";
-import { colorDistance, hexToRgb } from "@/lib/colorUtils";
+import { hexToRgb } from "@/lib/colorUtils";
 import { getContrastColor } from "@/lib/colorUtils";
 
 interface SitePreviewProps {
   originalColors: ExtractedColor[];
   selectedPalette: PresetPalette;
   siteUrl: string;
+  screenshot?: string;
 }
 
 interface ColorRole {
@@ -17,66 +19,121 @@ interface ColorRole {
   newColor: string;
 }
 
-function findBestMatch(
-  target: ExtractedColor,
-  palette: PresetPalette
-): string {
-  const paletteColors = Object.values(palette.colors);
-  const targetRgb = hexToRgb(target.hex);
-
-  let bestColor = paletteColors[0];
-  let bestDist = Infinity;
-
-  for (const pc of paletteColors) {
-    const pcRgb = hexToRgb(pc);
-    const dist = colorDistance(targetRgb, pcRgb);
-    if (dist < bestDist) {
-      bestDist = dist;
-      bestColor = pc;
-    }
-  }
-
-  return bestColor;
-}
+// 카테고리별 팔레트 색상 매핑
+const ROLE_MAP: Record<ExtractedColor["category"], keyof PresetPalette["colors"]> = {
+  primary: "primary",
+  secondary: "secondary",
+  background: "background",
+  text: "text",
+  accent: "accent",
+};
 
 export default function SitePreview({
   originalColors,
   selectedPalette,
   siteUrl,
+  screenshot,
 }: SitePreviewProps) {
-  // Map original color categories to palette roles
-  const roles: ColorRole[] = [
-    {
-      label: "Primary",
-      role: "primary",
-      originalColor: originalColors.find((c) => c.category === "primary"),
-      newColor: selectedPalette.colors.primary,
-    },
-    {
-      label: "Secondary",
-      role: "secondary",
-      originalColor: originalColors.find((c) => c.category === "secondary"),
-      newColor: selectedPalette.colors.secondary,
-    },
-    {
-      label: "Background",
-      role: "background",
-      originalColor: originalColors.find((c) => c.category === "background"),
-      newColor: selectedPalette.colors.background,
-    },
-    {
-      label: "Text",
-      role: "text",
-      originalColor: originalColors.find((c) => c.category === "text"),
-      newColor: selectedPalette.colors.text,
-    },
-    {
-      label: "Accent",
-      role: "accent",
-      originalColor: originalColors.find((c) => c.category === "accent"),
-      newColor: selectedPalette.colors.accent,
-    },
-  ];
+  const canvasRef = useRef<HTMLCanvasElement>(null);
+  const [processing, setProcessing] = useState(false);
+  const [canvasReady, setCanvasReady] = useState(false);
+
+  // screenshot + 선택된 팔레트가 바뀔 때마다 Canvas 픽셀 치환 실행
+  useEffect(() => {
+    if (!screenshot) return;
+
+    setProcessing(true);
+    setCanvasReady(false);
+
+    // 스피너가 렌더링된 후 무거운 작업 실행
+    const timer = setTimeout(() => {
+      const img = new Image();
+      img.onload = () => {
+        const canvas = canvasRef.current;
+        if (!canvas) return;
+
+        canvas.width = img.width;
+        canvas.height = img.height;
+
+        const ctx = canvas.getContext("2d");
+        if (!ctx) return;
+
+        ctx.drawImage(img, 0, 0);
+        const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
+        const data = imageData.data;
+
+        // 원본 색상 → 교체 색상 룩업 플랫 배열 (r,g,b, newR,newG,newB 순)
+        // 빠른 루프를 위해 객체 대신 typed array 사용
+        const numColors = originalColors.length;
+        const colorData = new Int32Array(numColors * 6);
+        for (let i = 0; i < numColors; i++) {
+          const c = originalColors[i];
+          const newHex = selectedPalette.colors[ROLE_MAP[c.category]];
+          const newRgb = hexToRgb(newHex);
+          colorData[i * 6 + 0] = c.rgb.r;
+          colorData[i * 6 + 1] = c.rgb.g;
+          colorData[i * 6 + 2] = c.rgb.b;
+          colorData[i * 6 + 3] = newRgb.r;
+          colorData[i * 6 + 4] = newRgb.g;
+          colorData[i * 6 + 5] = newRgb.b;
+        }
+
+        const THRESHOLD_SQ = 40 * 40; // 단순 유클리드 제곱 거리 임계값
+
+        for (let i = 0; i < data.length; i += 4) {
+          const r = data[i];
+          const g = data[i + 1];
+          const b = data[i + 2];
+
+          let bestDistSq = Infinity;
+          let bestOffset = -1;
+
+          for (let j = 0; j < numColors; j++) {
+            const base = j * 6;
+            const dr = r - colorData[base];
+            const dg = g - colorData[base + 1];
+            const db = b - colorData[base + 2];
+            const distSq = dr * dr + dg * dg + db * db;
+            if (distSq < bestDistSq) {
+              bestDistSq = distSq;
+              bestOffset = base;
+            }
+          }
+
+          if (bestDistSq <= THRESHOLD_SQ && bestOffset >= 0) {
+            data[i] = colorData[bestOffset + 3];
+            data[i + 1] = colorData[bestOffset + 4];
+            data[i + 2] = colorData[bestOffset + 5];
+          }
+        }
+
+        ctx.putImageData(imageData, 0, 0);
+        setProcessing(false);
+        setCanvasReady(true);
+      };
+      img.src = screenshot;
+    }, 50);
+
+    return () => clearTimeout(timer);
+  }, [screenshot, selectedPalette.id, originalColors]);
+
+  // 카테고리 라벨 (한글)
+  const categoryLabels: Record<ExtractedColor["category"], string> = {
+    primary: "주요색",
+    accent: "강조색",
+    secondary: "보조색",
+    background: "배경색",
+    text: "텍스트",
+  };
+
+  const roles: ColorRole[] = (["primary", "accent", "secondary", "background", "text"] as const).map(
+    (cat) => ({
+      label: categoryLabels[cat],
+      role: ROLE_MAP[cat],
+      originalColor: originalColors.find((c) => c.category === cat),
+      newColor: selectedPalette.colors[ROLE_MAP[cat]],
+    })
+  );
 
   return (
     <div className="w-full">
@@ -90,145 +147,86 @@ export default function SitePreview({
         <div className="space-y-2">
           {roles.map(({ label, originalColor, newColor }) => (
             <div key={label} className="flex items-center gap-3">
-              <span className="text-xs text-gray-400 w-20">{label}</span>
+              <span className="text-xs text-gray-400 w-16">{label}</span>
 
-              {/* Original */}
               <div className="flex items-center gap-1.5">
                 <div
-                  className="w-7 h-7 rounded border border-gray-600"
-                  style={{
-                    backgroundColor: originalColor?.hex ?? "#888",
-                  }}
+                  className="w-6 h-6 rounded border border-gray-600"
+                  style={{ backgroundColor: originalColor?.hex ?? "#888" }}
                 />
-                <span className="text-xs font-mono text-gray-400">
+                <span className="text-xs font-mono text-gray-500">
                   {originalColor?.hex ?? "N/A"}
                 </span>
               </div>
 
-              <svg
-                className="w-4 h-4 text-gray-500 flex-shrink-0"
-                fill="none"
-                stroke="currentColor"
-                viewBox="0 0 24 24"
-              >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth={2}
-                  d="M17 8l4 4m0 0l-4 4m4-4H3"
-                />
+              <svg className="w-3 h-3 text-gray-600 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 8l4 4m0 0l-4 4m4-4H3" />
               </svg>
 
-              {/* New */}
               <div className="flex items-center gap-1.5">
                 <div
-                  className="w-7 h-7 rounded border border-gray-600"
+                  className="w-6 h-6 rounded border border-gray-600"
                   style={{ backgroundColor: newColor }}
                 />
-                <span className="text-xs font-mono text-gray-400">
-                  {newColor}
-                </span>
+                <span className="text-xs font-mono text-gray-500">{newColor}</span>
               </div>
             </div>
           ))}
         </div>
       </div>
 
-      {/* Mock UI preview */}
-      <div
-        className="rounded-xl overflow-hidden border border-gray-700 shadow-2xl"
-        style={{ backgroundColor: selectedPalette.colors.background }}
-      >
-        {/* Mock nav bar */}
-        <div
-          className="px-4 py-3 flex items-center justify-between"
-          style={{ backgroundColor: selectedPalette.colors.primary }}
-        >
-          <div className="flex items-center gap-2">
-            <div
-              className="w-6 h-6 rounded"
-              style={{ backgroundColor: selectedPalette.colors.accent }}
+      {/* Canvas 스크린샷 미리보기 */}
+      {screenshot && (
+        <div className="rounded-xl overflow-hidden border border-gray-700 shadow-2xl relative">
+          {/* 처리 중 오버레이 */}
+          {processing && (
+            <div className="absolute inset-0 z-10 flex flex-col items-center justify-center bg-gray-900/80">
+              <div className="w-10 h-10 relative mb-3">
+                <div className="absolute inset-0 rounded-full border-4 border-gray-700" />
+                <div className="absolute inset-0 rounded-full border-4 border-violet-500 border-t-transparent animate-spin" />
+              </div>
+              <p className="text-sm text-gray-300">색상 교체 중...</p>
+            </div>
+          )}
+          <canvas
+            ref={canvasRef}
+            className="w-full h-auto block"
+            style={{ display: canvasReady || processing ? "block" : "none" }}
+          />
+          {/* 처리 전 원본 이미지 (canvas 준비되기 전까지 표시) */}
+          {!canvasReady && !processing && (
+            // eslint-disable-next-line @next/next/no-img-element
+            <img
+              src={screenshot}
+              alt="스크린샷"
+              className="w-full h-auto block"
             />
-            <span
-              className="text-sm font-semibold"
-              style={{ color: getContrastColor(selectedPalette.colors.primary) }}
-            >
+          )}
+        </div>
+      )}
+
+      {/* screenshot 없을 때 Mock UI fallback */}
+      {!screenshot && (
+        <div
+          className="rounded-xl overflow-hidden border border-gray-700 shadow-2xl"
+          style={{ backgroundColor: selectedPalette.colors.background }}
+        >
+          <div
+            className="px-4 py-3 flex items-center gap-2"
+            style={{ backgroundColor: selectedPalette.colors.primary }}
+          >
+            <div className="w-5 h-5 rounded" style={{ backgroundColor: selectedPalette.colors.accent }} />
+            <span className="text-sm font-semibold" style={{ color: getContrastColor(selectedPalette.colors.primary) }}>
               {new URL(siteUrl.startsWith("http") ? siteUrl : "https://" + siteUrl).hostname}
             </span>
           </div>
-          <div className="flex gap-3">
-            {["Home", "About", "Contact"].map((item) => (
-              <span
-                key={item}
-                className="text-xs opacity-80"
-                style={{
-                  color: getContrastColor(selectedPalette.colors.primary),
-                }}
-              >
-                {item}
-              </span>
-            ))}
+          <div className="px-6 py-8">
+            <p className="text-sm" style={{ color: selectedPalette.colors.text }}>
+              <strong>{selectedPalette.name}</strong> 테마 미리보기
+            </p>
           </div>
         </div>
-
-        {/* Mock hero */}
-        <div className="px-6 py-8">
-          <div
-            className="text-xl font-bold mb-2"
-            style={{ color: selectedPalette.colors.text }}
-          >
-            사이트에 오신 것을 환영합니다
-          </div>
-          <div
-            className="text-sm mb-4 opacity-70"
-            style={{ color: selectedPalette.colors.text }}
-          >
-            <strong>{selectedPalette.name}</strong> 테마가 적용된 사이트 모습의 미리보기입니다.
-          </div>
-          <button
-            className="px-4 py-2 rounded-lg text-sm font-semibold"
-            style={{
-              backgroundColor: selectedPalette.colors.accent,
-              color: getContrastColor(selectedPalette.colors.accent),
-            }}
-          >
-            시작하기
-          </button>
-        </div>
-
-        {/* Mock cards */}
-        <div className="px-6 pb-6 grid grid-cols-3 gap-3">
-          {["기능 1", "기능 2", "기능 3"].map((feature, i) => (
-            <div
-              key={feature}
-              className="p-3 rounded-lg"
-              style={{ backgroundColor: selectedPalette.colors.surface }}
-            >
-              <div
-                className="w-8 h-8 rounded mb-2"
-                style={{
-                  backgroundColor:
-                    i % 2 === 0
-                      ? selectedPalette.colors.secondary
-                      : selectedPalette.colors.accent,
-                }}
-              />
-              <p
-                className="text-xs font-medium"
-                style={{ color: selectedPalette.colors.text }}
-              >
-                {feature}
-              </p>
-              <p
-                className="text-xs opacity-60 mt-1"
-                style={{ color: selectedPalette.colors.text }}
-              >
-                샘플 설명 텍스트입니다.
-              </p>
-            </div>
-          ))}
-        </div>
-      </div>
+      )}
     </div>
   );
 }
