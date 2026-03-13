@@ -30,16 +30,23 @@ export default function HomePage() {
         body: JSON.stringify({ url }),
       });
 
+      const contentType = response.headers.get("content-type") ?? "";
+      if (!contentType.includes("application/json")) {
+        const text = await response.text();
+        console.error("Non-JSON response:", text.slice(0, 300));
+        throw new Error("서버 오류가 발생했습니다. 잠시 후 다시 시도해 주세요.");
+      }
+
       const data = await response.json();
 
       if (!response.ok) {
-        throw new Error(data.error ?? "Failed to extract colors");
+        throw new Error(data.error ?? "색상 추출에 실패했습니다.");
       }
 
       setResult(data);
       setState("success");
     } catch (err) {
-      setErrorMessage(err instanceof Error ? err.message : "Unknown error");
+      setErrorMessage(err instanceof Error ? err.message : "알 수 없는 오류가 발생했습니다.");
       setState("error");
     }
   };
