@@ -1,7 +1,7 @@
 "use client";
 
-import { useState } from "react";
-import type { ColorExtractionResult, PresetPalette } from "@/types";
+import { useState, useMemo } from "react";
+import type { ColorExtractionResult, PresetPalette, ExtractedColor } from "@/types";
 import UrlInput from "@/components/UrlInput";
 import ColorPalette from "@/components/ColorPalette";
 import ColorWheel from "@/components/ColorWheel";
@@ -12,6 +12,16 @@ import ThemeToggle from "@/components/ThemeToggle";
 
 type AppState = "idle" | "loading" | "success" | "error";
 
+const CATEGORY_ORDER: ExtractedColor["category"][] = [
+  "primary", "accent", "secondary", "background", "text",
+];
+
+function getDisplayColors(colors: ExtractedColor[]): ExtractedColor[] {
+  return CATEGORY_ORDER.flatMap((cat) =>
+    colors.filter((c) => c.category === cat).slice(0, 5)
+  );
+}
+
 export default function HomePage() {
   const [state, setState] = useState<AppState>("idle");
   const [result, setResult] = useState<ColorExtractionResult | null>(null);
@@ -19,6 +29,11 @@ export default function HomePage() {
   const [selectedPalette, setSelectedPalette] = useState<PresetPalette | null>(null);
   const [activeTab, setActiveTab] = useState<"palette" | "wheel" | "preview">("palette");
   const [processedScreenshot, setProcessedScreenshot] = useState<string | null>(null);
+
+  const displayColors = useMemo(
+    () => (result ? getDisplayColors(result.colors) : []),
+    [result]
+  );
 
   const handleUrlSubmit = async (url: string) => {
     setState("loading");
@@ -188,12 +203,12 @@ export default function HomePage() {
 
             {/* Tab content */}
             {activeTab === "palette" && (
-              <ColorPalette colors={result.colors} />
+              <ColorPalette colors={displayColors} />
             )}
 
             {activeTab === "wheel" && (
               <div className="flex justify-center">
-                <ColorWheel colors={result.colors} />
+                <ColorWheel colors={displayColors} />
               </div>
             )}
 
@@ -201,7 +216,7 @@ export default function HomePage() {
               <div className="space-y-6">
                 {selectedPalette && (
                   <SitePreview
-                    originalColors={result.colors}
+                    originalColors={displayColors}
                     selectedPalette={selectedPalette}
                     screenshot={result.screenshot}
                     onProcessed={setProcessedScreenshot}
