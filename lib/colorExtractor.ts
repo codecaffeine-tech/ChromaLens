@@ -182,7 +182,7 @@ export async function extractColorsFromUrl(
   url: string
 ): Promise<ColorExtractionResult> {
   // Dynamic import to avoid bundling puppeteer on client side
-  const puppeteer = await import("puppeteer");
+  const puppeteer = await import("puppeteer-core");
 
   const browser = await puppeteer.default.launch({
     headless: true,
