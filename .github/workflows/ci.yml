@@ -1,5 +1,13 @@
 name: CI
 
+# Pipeline: lint → typecheck → unit-tests → e2e-tests → build → deploy-check
+#
+# Deployment strategy:
+#   Railway is connected to this GitHub repository and automatically deploys
+#   on every push to master (Git-based deployment, no manual trigger needed).
+#   The deploy-check job verifies the production URL is healthy after deployment.
+#   See: https://docs.railway.app/guides/github-autodeploy
+
 on:
   push:
     branches: [master, develop]
