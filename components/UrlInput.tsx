@@ -8,11 +8,11 @@ interface UrlInputProps {
 }
 
 const EXAMPLE_URLS = [
-  "github.com",
-  "stripe.com",
-  "vercel.com",
-  "tailwindcss.com",
-  "linear.app",
+  "naver.com",
+  "kakao.com",
+  "coupang.com",
+  "toss.im",
+  "samsung.com",
 ];
 
 export default function UrlInput({ onSubmit, isLoading }: UrlInputProps) {
