@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useMemo } from "react";
+import { useState, useMemo, useEffect, useRef } from "react";
 import type { ColorExtractionResult, PresetPalette, ExtractedColor } from "@/types";
 import UrlInput from "@/components/UrlInput";
 import ColorPalette from "@/components/ColorPalette";
@@ -11,6 +11,14 @@ import BeforeAfterSlider from "@/components/BeforeAfterSlider";
 import ThemeToggle from "@/components/ThemeToggle";
 
 type AppState = "idle" | "loading" | "success" | "error";
+
+const LOADING_STEPS = [
+  { delay: 0,    text: "브라우저 실행 중..." },
+  { delay: 5000, text: "페이지 로딩 중..." },
+  { delay: 10000, text: "색상 추출 중..." },
+  { delay: 18000, text: "스크린샷 캡처 중..." },
+  { delay: 25000, text: "마무리 중..." },
+];
 
 const CATEGORY_ORDER: ExtractedColor["category"][] = [
   "primary", "accent", "secondary", "background", "text",
@@ -29,6 +37,24 @@ export default function HomePage() {
   const [selectedPalette, setSelectedPalette] = useState<PresetPalette | null>(null);
   const [activeTab, setActiveTab] = useState<"palette" | "wheel" | "preview">("palette");
   const [processedScreenshot, setProcessedScreenshot] = useState<string | null>(null);
+  const [loadingStepIdx, setLoadingStepIdx] = useState(0);
+  const loadingTimers = useRef<ReturnType<typeof setTimeout>[]>([]);
+
+  useEffect(() => {
+    if (state === "loading") {
+      setLoadingStepIdx(0);
+      loadingTimers.current = LOADING_STEPS.slice(1).map((step, i) =>
+        setTimeout(() => setLoadingStepIdx(i + 1), step.delay)
+      );
+    } else {
+      loadingTimers.current.forEach(clearTimeout);
+      loadingTimers.current = [];
+      setLoadingStepIdx(0);
+    }
+    return () => {
+      loadingTimers.current.forEach(clearTimeout);
+    };
+  }, [state]);
 
   const displayColors = useMemo(
     () => (result ? getDisplayColors(result.colors) : []),
@@ -110,7 +136,24 @@ export default function HomePage() {
               <div className="absolute inset-0 rounded-full border-4 border-gray-700" />
               <div className="absolute inset-0 rounded-full border-4 border-violet-500 border-t-transparent animate-spin" />
             </div>
-            <p className="text-gray-500 dark:text-gray-400">웹사이트 색상을 분석하는 중...</p>
+            <div className="flex items-center gap-2">
+              <span className="w-2 h-2 rounded-full bg-violet-500 animate-pulse" />
+              <p className="text-gray-300 dark:text-gray-300 font-medium transition-all duration-500">
+                {LOADING_STEPS[loadingStepIdx].text}
+              </p>
+            </div>
+            <div className="flex gap-1.5 mt-1">
+              {LOADING_STEPS.map((_, i) => (
+                <span
+                  key={i}
+                  className={`h-1 rounded-full transition-all duration-500 ${
+                    i <= loadingStepIdx
+                      ? "w-6 bg-violet-500"
+                      : "w-2 bg-gray-700"
+                  }`}
+                />
+              ))}
+            </div>
             <p className="text-gray-400 dark:text-gray-600 text-sm">
               최대 30초 정도 소요될 수 있습니다
             </p>
