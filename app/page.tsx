@@ -8,6 +8,7 @@ import ColorWheel from "@/components/ColorWheel";
 import PaletteSelector from "@/components/PaletteSelector";
 import SitePreview from "@/components/SitePreview";
 import BeforeAfterSlider from "@/components/BeforeAfterSlider";
+import ThemeToggle from "@/components/ThemeToggle";
 
 type AppState = "idle" | "loading" | "success" | "error";
 
@@ -55,27 +56,28 @@ export default function HomePage() {
   };
 
   return (
-    <div className="min-h-screen bg-gray-950">
+    <div className="min-h-screen bg-white dark:bg-gray-950">
       {/* Header */}
-      <header className="border-b border-gray-800">
+      <header className="border-b border-gray-200 dark:border-gray-800">
         <div className="max-w-7xl mx-auto px-4 py-5 flex items-center gap-3">
           <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-violet-500 to-pink-500 flex items-center justify-center">
             <span className="text-white text-lg font-bold">C</span>
           </div>
-          <div>
-            <h1 className="text-xl font-bold text-white">ChromaLens</h1>
+          <div className="flex-1">
+            <h1 className="text-xl font-bold text-gray-900 dark:text-white">ChromaLens</h1>
             <p className="text-xs text-gray-500 -mt-0.5">웹사이트 색상 분석기</p>
           </div>
+          <ThemeToggle />
         </div>
       </header>
 
       <main className="max-w-7xl mx-auto px-4 py-8">
         {/* Hero section */}
         <div className="text-center mb-10">
-          <h2 className="text-4xl font-bold text-white mb-3">
+          <h2 className="text-4xl font-bold text-gray-900 dark:text-white mb-3">
             웹사이트 색상을 분석하세요
           </h2>
-          <p className="text-gray-400 text-lg max-w-xl mx-auto">
+          <p className="text-gray-500 dark:text-gray-400 text-lg max-w-xl mx-auto">
             URL만 입력하면 사이트의 색상 팔레트를 추출하고, 색상환으로 시각화하며,
             다른 테마를 적용했을 때의 모습을 미리 볼 수 있습니다.
           </p>
@@ -93,8 +95,8 @@ export default function HomePage() {
               <div className="absolute inset-0 rounded-full border-4 border-gray-700" />
               <div className="absolute inset-0 rounded-full border-4 border-violet-500 border-t-transparent animate-spin" />
             </div>
-            <p className="text-gray-400">웹사이트 색상을 분석하는 중...</p>
-            <p className="text-gray-600 text-sm">
+            <p className="text-gray-500 dark:text-gray-400">웹사이트 색상을 분석하는 중...</p>
+            <p className="text-gray-400 dark:text-gray-600 text-sm">
               최대 30초 정도 소요될 수 있습니다
             </p>
           </div>
@@ -102,9 +104,9 @@ export default function HomePage() {
 
         {/* Error state */}
         {state === "error" && (
-          <div className="max-w-xl mx-auto bg-red-950/50 border border-red-800 rounded-xl p-6 text-center">
+          <div className="max-w-xl mx-auto bg-red-50 dark:bg-red-950/50 border border-red-300 dark:border-red-800 rounded-xl p-6 text-center">
             <svg
-              className="w-10 h-10 text-red-400 mx-auto mb-3"
+              className="w-10 h-10 text-red-500 dark:text-red-400 mx-auto mb-3"
               fill="none"
               stroke="currentColor"
               viewBox="0 0 24 24"
@@ -116,10 +118,10 @@ export default function HomePage() {
                 d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"
               />
             </svg>
-            <p className="text-red-300 font-medium">{errorMessage}</p>
+            <p className="text-red-600 dark:text-red-300 font-medium">{errorMessage}</p>
             <button
               onClick={() => setState("idle")}
-              className="mt-4 text-sm text-red-400 hover:text-red-300"
+              className="mt-4 text-sm text-red-500 dark:text-red-400 hover:text-red-400 dark:hover:text-red-300"
             >
               다시 시도
             </button>
@@ -130,19 +132,19 @@ export default function HomePage() {
         {state === "success" && result && (
           <div className="space-y-8">
             {/* Site info bar + screenshot */}
-            <div className="bg-gray-800/50 rounded-xl overflow-hidden border border-gray-700/50">
+            <div className="bg-white dark:bg-gray-800/50 rounded-xl overflow-hidden border border-gray-200 dark:border-gray-700/50 shadow-sm dark:shadow-none">
               <div className="flex items-center gap-3 px-4 py-3">
                 <div
                   className="w-3 h-3 rounded-full flex-shrink-0"
                   style={{ backgroundColor: result.dominantColor }}
                 />
-                <span className="text-sm text-gray-300 truncate">{result.url}</span>
+                <span className="text-sm text-gray-700 dark:text-gray-300 truncate">{result.url}</span>
                 <span className="text-xs text-gray-500 ml-auto flex-shrink-0">
                   {result.totalColors}개 색상 추출됨
                 </span>
               </div>
               {result.screenshot && (
-                <div className="border-t border-gray-700/50">
+                <div className="border-t border-gray-200 dark:border-gray-700/50">
                   {activeTab === "preview" && processedScreenshot ? (
                     <BeforeAfterSlider
                       before={result.screenshot}
@@ -162,7 +164,7 @@ export default function HomePage() {
             </div>
 
             {/* Tabs */}
-            <div className="flex gap-1 bg-gray-800/50 rounded-xl p-1 max-w-sm">
+            <div className="flex gap-1 bg-gray-200/70 dark:bg-gray-800/50 rounded-xl p-1 max-w-sm">
               {(
                 [
                   { id: "palette", label: "팔레트" },
@@ -176,7 +178,7 @@ export default function HomePage() {
                   className={`flex-1 px-3 py-2 text-sm font-medium rounded-lg transition-all ${
                     activeTab === id
                       ? "bg-violet-600 text-white"
-                      : "text-gray-400 hover:text-gray-200"
+                      : "text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200"
                   }`}
                 >
                   {label}
@@ -236,11 +238,11 @@ export default function HomePage() {
             ].map(({ icon, title, desc }) => (
               <div
                 key={title}
-                className="bg-gray-800/40 border border-gray-700/50 rounded-xl p-5"
+                className="bg-white dark:bg-gray-800/40 border border-gray-200 dark:border-gray-700/50 rounded-xl p-5 shadow-sm dark:shadow-none"
               >
-                <div className="w-10 h-10 bg-violet-900/50 rounded-lg flex items-center justify-center mb-3">
+                <div className="w-10 h-10 bg-violet-100 dark:bg-violet-900/50 rounded-lg flex items-center justify-center mb-3">
                   <svg
-                    className="w-5 h-5 text-violet-400"
+                    className="w-5 h-5 text-violet-500 dark:text-violet-400"
                     fill="none"
                     stroke="currentColor"
                     viewBox="0 0 24 24"
@@ -253,7 +255,7 @@ export default function HomePage() {
                     />
                   </svg>
                 </div>
-                <h3 className="font-semibold text-gray-200 mb-1">{title}</h3>
+                <h3 className="font-semibold text-gray-800 dark:text-gray-200 mb-1">{title}</h3>
                 <p className="text-sm text-gray-500">{desc}</p>
               </div>
             ))}
@@ -261,10 +263,10 @@ export default function HomePage() {
         )}
       </main>
 
-      <footer className="border-t border-gray-800 mt-20 py-8 text-center">
-        <p className="text-sm font-semibold text-gray-400 mb-1">ChromaLens</p>
-        <p className="text-xs text-gray-600 mb-3">Built for UBcare AI Hackathon</p>
-        <p className="text-xs text-gray-600">
+      <footer className="border-t border-gray-200 dark:border-gray-800 mt-20 py-8 text-center">
+        <p className="text-sm font-semibold text-gray-500 dark:text-gray-400 mb-1">ChromaLens</p>
+        <p className="text-xs text-gray-400 dark:text-gray-600 mb-3">Built for UBcare AI Hackathon</p>
+        <p className="text-xs text-gray-400 dark:text-gray-600">
           제작자&nbsp;
           <a
             href="mailto:codecaffein@ubcare.co.kr"

@@ -130,11 +130,11 @@ export default function SitePreview({
   return (
     <div className="w-full">
       {/* 색상 매핑 패널 */}
-      <div className="bg-gray-800/50 rounded-xl p-3 flex flex-col gap-2">
+      <div className="bg-gray-100 dark:bg-gray-800/50 rounded-xl p-3 flex flex-col gap-2 border border-gray-200 dark:border-transparent">
         {/* 헤더 + 전체 선택 + 처리 중 표시 */}
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-2">
-            <span className="text-xs text-gray-400">색상 매핑</span>
+            <span className="text-xs text-gray-500 dark:text-gray-400">색상 매핑</span>
             {processing && (
               <span className="flex items-center gap-1 text-[10px] text-violet-400">
                 <span className="w-2.5 h-2.5 relative inline-block">
@@ -161,7 +161,7 @@ export default function SitePreview({
             return (
               <label
                 key={color.hex}
-                className={`flex items-center gap-1 cursor-pointer rounded-lg px-1.5 py-1 transition-all hover:bg-gray-700/40 ${isEnabled ? "" : "opacity-35"}`}
+                className={`flex items-center gap-1 cursor-pointer rounded-lg px-1.5 py-1 transition-all hover:bg-gray-200/60 dark:hover:bg-gray-700/40 ${isEnabled ? "" : "opacity-35"}`}
               >
                 <input
                   type="checkbox"

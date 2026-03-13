@@ -53,8 +53,8 @@ export default function ColorPalette({ colors }: ColorPaletteProps) {
     <div className="w-full">
       {/* 헤더 */}
       <div className="flex items-center justify-between mb-4">
-        <h2 className="text-lg font-semibold text-gray-200">추출된 색상</h2>
-        <div className="flex gap-1 bg-gray-800 rounded-lg p-1">
+        <h2 className="text-lg font-semibold text-gray-800 dark:text-gray-200">추출된 색상</h2>
+        <div className="flex gap-1 bg-gray-200/70 dark:bg-gray-800 rounded-lg p-1">
           {(["hex", "rgb", "hsl"] as ColorFormat[]).map((f) => (
             <button
               key={f}
@@ -62,7 +62,7 @@ export default function ColorPalette({ colors }: ColorPaletteProps) {
               className={`px-3 py-1 text-xs font-medium rounded-md transition-all ${
                 format === f
                   ? "bg-violet-600 text-white"
-                  : "text-gray-400 hover:text-gray-200"
+                  : "text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200"
               }`}
             >
               {formatLabels[f]}
@@ -72,7 +72,7 @@ export default function ColorPalette({ colors }: ColorPaletteProps) {
       </div>
 
       {/* 비율 바 */}
-      <div className="flex w-full h-6 rounded-lg overflow-hidden mb-6 border border-gray-700">
+      <div className="flex w-full h-6 rounded-lg overflow-hidden mb-6 border border-gray-300 dark:border-gray-700">
         {colors.slice(0, 12).map((color) => (
           <div
             key={color.hex}
@@ -92,13 +92,13 @@ export default function ColorPalette({ colors }: ColorPaletteProps) {
         {grouped.map(({ category, label, colors: groupColors }) => (
           <div key={category}>
             <div className="flex items-center gap-2 mb-3">
-              <span className="text-xs font-semibold text-gray-400 uppercase tracking-wider">
+              <span className="text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider">
                 {label}
               </span>
-              <span className="text-xs text-gray-600">
+              <span className="text-xs text-gray-400 dark:text-gray-600">
                 {groupColors.length}개
               </span>
-              <div className="flex-1 h-px bg-gray-800" />
+              <div className="flex-1 h-px bg-gray-200 dark:bg-gray-800" />
             </div>
 
             <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 lg:grid-cols-7 gap-2">

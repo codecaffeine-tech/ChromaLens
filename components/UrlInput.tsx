@@ -50,7 +50,7 @@ export default function UrlInput({ onSubmit, isLoading }: UrlInputProps) {
               value={url}
               onChange={(e) => setUrl(e.target.value)}
               placeholder="웹사이트 URL 입력 (예: github.com)"
-              className="w-full pl-10 pr-4 py-3 bg-gray-800 border border-gray-700 rounded-xl text-gray-100 placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-violet-500 focus:border-transparent transition-all"
+              className="w-full pl-10 pr-4 py-3 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-700 rounded-xl text-gray-900 dark:text-gray-100 placeholder-gray-400 dark:placeholder-gray-500 shadow-sm dark:shadow-none focus:outline-none focus:ring-2 focus:ring-violet-500 focus:border-transparent transition-all"
               disabled={isLoading}
               autoFocus
             />
@@ -58,7 +58,7 @@ export default function UrlInput({ onSubmit, isLoading }: UrlInputProps) {
           <button
             type="submit"
             disabled={isLoading || !url.trim()}
-            className="px-6 py-3 bg-violet-600 hover:bg-violet-500 disabled:bg-gray-700 disabled:cursor-not-allowed text-white font-semibold rounded-xl transition-all focus:outline-none focus:ring-2 focus:ring-violet-500 focus:ring-offset-2 focus:ring-offset-gray-950"
+            className="px-6 py-3 bg-violet-600 hover:bg-violet-500 disabled:bg-gray-300 dark:disabled:bg-gray-700 disabled:cursor-not-allowed text-white font-semibold rounded-xl transition-all focus:outline-none focus:ring-2 focus:ring-violet-500 focus:ring-offset-2 focus:ring-offset-white dark:focus:ring-offset-gray-950"
           >
             {isLoading ? (
               <span className="flex items-center gap-2">

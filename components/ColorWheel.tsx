@@ -125,7 +125,7 @@ export default function ColorWheel({ colors }: ColorWheelProps) {
 
   return (
     <div className="flex flex-col items-center gap-3">
-      <h2 className="text-lg font-semibold text-gray-200">색상환</h2>
+      <h2 className="text-lg font-semibold text-gray-800 dark:text-gray-200">색상환</h2>
       <div className="relative">
         <canvas
           ref={canvasRef}
@@ -140,7 +140,7 @@ export default function ColorWheel({ colors }: ColorWheelProps) {
           </div>
         )}
       </div>
-      <p className="text-xs text-gray-500">
+      <p className="text-xs text-gray-400 dark:text-gray-500">
         색조·채도 기준 배치 &middot; 점 크기 = 사용 빈도
       </p>
     </div>
