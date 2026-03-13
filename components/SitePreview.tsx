@@ -202,9 +202,15 @@ export default function SitePreview({
 
         {/* 우측: 비포/애프터 슬라이더 */}
         <div className="flex-1 rounded-xl overflow-hidden border border-gray-700 relative">
-          {/* 처리 중 스피너 */}
+          {/* 원본 스크린샷 — 항상 렌더링해서 컨테이너 높이 확보 */}
+          {screenshot && (
+            // eslint-disable-next-line @next/next/no-img-element
+            <img src={screenshot} alt="스크린샷" className="w-full h-auto block" />
+          )}
+
+          {/* 처리 중 오버레이 */}
           {processing && (
-            <div className="absolute inset-0 z-10 flex flex-col items-center justify-center bg-gray-900/75 min-h-[200px]">
+            <div className="absolute inset-0 z-10 flex flex-col items-center justify-center bg-gray-900/75">
               <div className="w-8 h-8 relative mb-2">
                 <div className="absolute inset-0 rounded-full border-4 border-gray-700" />
                 <div className="absolute inset-0 rounded-full border-4 border-violet-500 border-t-transparent animate-spin" />
@@ -213,16 +219,16 @@ export default function SitePreview({
             </div>
           )}
 
-          {screenshot && processedDataUrl && !processing ? (
-            <BeforeAfterSlider
-              before={screenshot}
-              after={processedDataUrl}
-              afterLabel={selectedPalette.name}
-            />
-          ) : screenshot && !processing ? (
-            // eslint-disable-next-line @next/next/no-img-element
-            <img src={screenshot} alt="스크린샷" className="w-full h-auto block" />
-          ) : null}
+          {/* 처리 완료 시 슬라이더로 덮기 */}
+          {screenshot && processedDataUrl && !processing && (
+            <div className="absolute inset-0">
+              <BeforeAfterSlider
+                before={screenshot}
+                after={processedDataUrl}
+                afterLabel={selectedPalette.name}
+              />
+            </div>
+          )}
         </div>
       </div>
 
