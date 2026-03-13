@@ -130,17 +130,35 @@ jobs:
       - name: Wait for Railway deployment
         run: sleep 30
 
-      - name: Check production health
+      - name: Health check — /api/health endpoint
+        id: health
         run: |
           RAILWAY_URL="${{ secrets.RAILWAY_PUBLIC_URL }}"
           if [ -z "$RAILWAY_URL" ]; then
             echo "::warning::RAILWAY_PUBLIC_URL secret not set — skipping health check"
             exit 0
           fi
-          STATUS=$(curl -s -o /dev/null -w "%{http_code}" --max-time 15 "$RAILWAY_URL" 2>/dev/null || echo "000")
-          echo "Health check HTTP status: $STATUS"
-          if [ "$STATUS" -ge 200 ] && [ "$STATUS" -lt 400 ]; then
-            echo "✅ Production deployment is healthy (HTTP $STATUS)"
+          echo "Checking $RAILWAY_URL/api/health ..."
+          RESPONSE=$(curl -sf --max-time 15 "$RAILWAY_URL/api/health" 2>/dev/null || echo "FAILED")
+          echo "Response: $RESPONSE"
+          if echo "$RESPONSE" | grep -q '"status":"ok"'; then
+            echo "✅ Production is healthy"
+            echo "healthy=true" >> $GITHUB_OUTPUT
           else
-            echo "::warning::Production returned HTTP $STATUS — may still be deploying"
+            echo "❌ Health check failed — production may need rollback"
+            echo "healthy=false" >> $GITHUB_OUTPUT
+            exit 1
           fi
+
+      - name: Print rollback instructions on failure
+        if: failure() && steps.health.outputs.healthy == 'false'
+        run: |
+          echo "### ⚠️ Deployment Health Check Failed" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "Production health check returned non-OK response." >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "**Rollback steps:**" >> $GITHUB_STEP_SUMMARY
+          echo "1. Open Railway dashboard → ChromaLens service" >> $GITHUB_STEP_SUMMARY
+          echo "2. Go to Deployments tab → find last stable deployment" >> $GITHUB_STEP_SUMMARY
+          echo "3. Click ··· → Rollback to this deployment" >> $GITHUB_STEP_SUMMARY
+          echo "4. Verify \`/api/health\` returns \`{\"status\":\"ok\"}\` after rollback" >> $GITHUB_STEP_SUMMARY

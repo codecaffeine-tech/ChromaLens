@@ -115,6 +115,31 @@ push to master
 - **커버리지 리포트**: GitHub Actions Step Summary에 자동 출력
 - **E2E 결과**: Playwright HTML 리포트 생성
 
+### 모니터링
+
+`GET /api/health` 엔드포인트가 상시 운영 중이며 Railway 내부 헬스체크 및 CI/CD 파이프라인에서 배포 성공 여부를 확인합니다.
+
+```json
+// GET /api/health → 200 OK
+{ "status": "ok", "timestamp": "2026-03-13T10:00:00.000Z", "version": "1.0.0", "uptime": 3600 }
+```
+
+- **CI 헬스체크**: master push 후 30초 대기 → `/api/health` 응답이 `"status":"ok"`가 아니면 `deploy-check` job 실패
+- **Railway 내장 모니터링**: Railway 대시보드에서 CPU·메모리·요청 수 실시간 확인
+
+### 롤백 전략
+
+`deploy-check` job이 실패하면 GitHub Actions Step Summary에 롤백 절차가 자동으로 출력됩니다.
+
+```
+1. Railway 대시보드 → ChromaLens 서비스 → Deployments 탭
+2. 마지막 정상 배포 옆 ··· → "Rollback to this deployment" 클릭
+3. /api/health 응답 확인: {"status":"ok"} 반환 시 복구 완료
+```
+
+- Railway는 모든 배포 이력을 보존하며 원클릭 롤백을 지원합니다.
+- CI 파이프라인이 실패하면 Railway 자동 배포가 중단되므로, 코드 병합 전 검증이 첫 번째 방어선입니다.
+
 ---
 
 ## 시작하기

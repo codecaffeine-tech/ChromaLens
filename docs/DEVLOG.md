@@ -267,6 +267,32 @@
 
 ---
 
+### Phase 11: 모니터링 & 자동 롤백 트리거 강화
+
+**배경**: CI/CD 심사에서 "자동 롤백, 모니터링 미흡" 지적 → 실제 헬스체크 엔드포인트와 롤백 가이드를 구축.
+
+**`/api/health` 엔드포인트 추가** (`app/api/health/route.ts`):
+- `GET /api/health` → `{ status, timestamp, version, uptime }` 응답
+- CI/CD `deploy-check` job과 Railway 내장 헬스체크가 이 엔드포인트를 사용
+- 서비스 가용성을 외부에서 단일 HTTP 요청으로 확인 가능
+
+**`deploy-check` job 강화** (`.github/workflows/ci.yml`):
+- 기존: `/` 루트 페이지 HTTP 상태만 확인, 비정상 시 `::warning::` 출력 후 성공 처리
+- 변경: `/api/health`에서 `"status":"ok"` 응답 확인 → 실패 시 job 자체를 `exit 1`로 종료
+- 실패 시 GitHub Actions Step Summary에 Railway 롤백 절차 자동 출력 (대시보드 경로, 클릭 순서)
+- 이로써 불량 배포가 감지되면 CI가 즉시 실패 상태로 전환 → 팀 알림 → 수동 롤백
+
+**문서화** (`README.md`):
+- 모니터링 섹션: `/api/health` 응답 포맷, Railway 대시보드 모니터링 안내
+- 롤백 전략 섹션: 단계별 Railway 롤백 절차 명시
+
+**완료**:
+- [x] `app/api/health/route.ts` — 헬스체크 엔드포인트
+- [x] `deploy-check` 실패 시 job fail + Step Summary에 롤백 가이드 자동 출력
+- [x] README.md 모니터링·롤백 전략 섹션 추가
+
+---
+
 ## 테스트 현황
 
 | 테스트 유형 | 파일 | 결과 | 커버리지 |
