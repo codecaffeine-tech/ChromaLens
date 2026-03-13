@@ -81,12 +81,12 @@ export default function SitePreview({
   return (
     <div className="w-full">
       <h2 className="text-lg font-semibold text-gray-200 mb-4">
-        Theme Preview: {selectedPalette.name}
+        테마 미리보기: {selectedPalette.name}
       </h2>
 
       {/* Color mapping table */}
       <div className="mb-6 bg-gray-800/50 rounded-xl p-4">
-        <p className="text-xs text-gray-400 mb-3">Color Mapping</p>
+        <p className="text-xs text-gray-400 mb-3">색상 매핑</p>
         <div className="space-y-2">
           {roles.map(({ label, originalColor, newColor }) => (
             <div key={label} className="flex items-center gap-3">
@@ -177,14 +177,13 @@ export default function SitePreview({
             className="text-xl font-bold mb-2"
             style={{ color: selectedPalette.colors.text }}
           >
-            Welcome to the site
+            사이트에 오신 것을 환영합니다
           </div>
           <div
             className="text-sm mb-4 opacity-70"
             style={{ color: selectedPalette.colors.text }}
           >
-            This is a preview of your website with the{" "}
-            <strong>{selectedPalette.name}</strong> color theme applied.
+            <strong>{selectedPalette.name}</strong> 테마가 적용된 사이트 모습의 미리보기입니다.
           </div>
           <button
             className="px-4 py-2 rounded-lg text-sm font-semibold"
@@ -193,13 +192,13 @@ export default function SitePreview({
               color: getContrastColor(selectedPalette.colors.accent),
             }}
           >
-            Get Started
+            시작하기
           </button>
         </div>
 
         {/* Mock cards */}
         <div className="px-6 pb-6 grid grid-cols-3 gap-3">
-          {["Feature 1", "Feature 2", "Feature 3"].map((feature, i) => (
+          {["기능 1", "기능 2", "기능 3"].map((feature, i) => (
             <div
               key={feature}
               className="p-3 rounded-lg"
@@ -224,7 +223,7 @@ export default function SitePreview({
                 className="text-xs opacity-60 mt-1"
                 style={{ color: selectedPalette.colors.text }}
               >
-                Sample description text.
+                샘플 설명 텍스트입니다.
               </p>
             </div>
           ))}

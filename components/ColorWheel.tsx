@@ -125,7 +125,7 @@ export default function ColorWheel({ colors }: ColorWheelProps) {
 
   return (
     <div className="flex flex-col items-center gap-3">
-      <h2 className="text-lg font-semibold text-gray-200">Color Wheel</h2>
+      <h2 className="text-lg font-semibold text-gray-200">색상환</h2>
       <div className="relative">
         <canvas
           ref={canvasRef}
@@ -136,12 +136,12 @@ export default function ColorWheel({ colors }: ColorWheelProps) {
         />
         {colors.length === 0 && (
           <div className="absolute inset-0 flex items-center justify-center">
-            <span className="text-gray-500 text-sm">No colors yet</span>
+            <span className="text-gray-500 text-sm">아직 색상이 없습니다</span>
           </div>
         )}
       </div>
       <p className="text-xs text-gray-500">
-        Positioned by hue & saturation. Dot size = frequency.
+        색조·채도 기준 배치 &middot; 점 크기 = 사용 빈도
       </p>
     </div>
   );

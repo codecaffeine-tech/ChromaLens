@@ -15,7 +15,7 @@ export default function PaletteSelector({
   return (
     <div className="w-full">
       <h2 className="text-lg font-semibold text-gray-200 mb-4">
-        Apply a Color Theme
+        색상 테마 적용
       </h2>
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
         {PRESET_PALETTES.map((palette) => {

@@ -181,6 +181,9 @@ export async function extractColorsFromUrl(
 
   const browser = await puppeteer.default.launch({
     headless: true,
+    executablePath:
+      process.env.PUPPETEER_EXECUTABLE_PATH ||
+      "C:\\Program Files\\Google\\Chrome\\Application\\chrome.exe",
     args: [
       "--no-sandbox",
       "--disable-setuid-sandbox",
@@ -188,7 +191,6 @@ export async function extractColorsFromUrl(
       "--disable-accelerated-2d-canvas",
       "--no-first-run",
       "--no-zygote",
-      "--single-process",
       "--disable-gpu",
     ],
   });

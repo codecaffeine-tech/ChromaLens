@@ -54,7 +54,7 @@ export default function HomePage() {
           </div>
           <div>
             <h1 className="text-xl font-bold text-white">ChromaLens</h1>
-            <p className="text-xs text-gray-500 -mt-0.5">Website Color Analyzer</p>
+            <p className="text-xs text-gray-500 -mt-0.5">웹사이트 색상 분석기</p>
           </div>
         </div>
       </header>
@@ -63,11 +63,11 @@ export default function HomePage() {
         {/* Hero section */}
         <div className="text-center mb-10">
           <h2 className="text-4xl font-bold text-white mb-3">
-            Analyze any website&apos;s colors
+            웹사이트 색상을 분석하세요
           </h2>
           <p className="text-gray-400 text-lg max-w-xl mx-auto">
-            Extract color palettes, visualize on a color wheel, and see what the
-            site would look like with a different theme.
+            URL만 입력하면 사이트의 색상 팔레트를 추출하고, 색상환으로 시각화하며,
+            다른 테마를 적용했을 때의 모습을 미리 볼 수 있습니다.
           </p>
         </div>
 
@@ -83,9 +83,9 @@ export default function HomePage() {
               <div className="absolute inset-0 rounded-full border-4 border-gray-700" />
               <div className="absolute inset-0 rounded-full border-4 border-violet-500 border-t-transparent animate-spin" />
             </div>
-            <p className="text-gray-400">Analyzing website colors...</p>
+            <p className="text-gray-400">웹사이트 색상을 분석하는 중...</p>
             <p className="text-gray-600 text-sm">
-              This may take up to 30 seconds
+              최대 30초 정도 소요될 수 있습니다
             </p>
           </div>
         )}
@@ -111,7 +111,7 @@ export default function HomePage() {
               onClick={() => setState("idle")}
               className="mt-4 text-sm text-red-400 hover:text-red-300"
             >
-              Try again
+              다시 시도
             </button>
           </div>
         )}
@@ -127,7 +127,7 @@ export default function HomePage() {
               />
               <span className="text-sm text-gray-300 truncate">{result.url}</span>
               <span className="text-xs text-gray-500 ml-auto flex-shrink-0">
-                {result.totalColors} colors extracted
+                {result.totalColors}개 색상 추출됨
               </span>
             </div>
 
@@ -135,9 +135,9 @@ export default function HomePage() {
             <div className="flex gap-1 bg-gray-800/50 rounded-xl p-1 max-w-sm">
               {(
                 [
-                  { id: "palette", label: "Palette" },
-                  { id: "wheel", label: "Color Wheel" },
-                  { id: "preview", label: "Theme Preview" },
+                  { id: "palette", label: "팔레트" },
+                  { id: "wheel", label: "색상환" },
+                  { id: "preview", label: "테마 미리보기" },
                 ] as const
               ).map(({ id, label }) => (
                 <button
@@ -189,18 +189,18 @@ export default function HomePage() {
             {[
               {
                 icon: "M7 21a4 4 0 01-4-4V5a2 2 0 012-2h4a2 2 0 012 2v12a4 4 0 01-4 4zm0 0h12a2 2 0 002-2v-4a2 2 0 00-2-2h-2.343M11 7.343l1.657-1.657a2 2 0 012.828 0l2.829 2.829a2 2 0 010 2.828l-8.486 8.485M7 17h.01",
-                title: "Extract Colors",
-                desc: "Puppeteer scans the live website and collects every color used.",
+                title: "색상 추출",
+                desc: "실제 브라우저로 사이트를 렌더링해 사용된 모든 색상을 수집합니다.",
               },
               {
                 icon: "M11 3.055A9.001 9.001 0 1020.945 13H11V3.055z M20.488 9H15V3.512A9.025 9.025 0 0120.488 9z",
-                title: "Color Wheel",
-                desc: "Colors plotted on a wheel by hue and saturation.",
+                title: "색상환 시각화",
+                desc: "추출된 색상을 색조·채도 기준으로 색상환에 배치해 표시합니다.",
               },
               {
                 icon: "M4 5a1 1 0 011-1h14a1 1 0 011 1v2a1 1 0 01-1 1H5a1 1 0 01-1-1V5zM4 13a1 1 0 011-1h6a1 1 0 011 1v6a1 1 0 01-1 1H5a1 1 0 01-1-1v-6zM16 13a1 1 0 011-1h2a1 1 0 011 1v6a1 1 0 01-1 1h-2a1 1 0 01-1-1v-6z",
-                title: "Theme Preview",
-                desc: "Pick a preset palette and preview the site with new colors.",
+                title: "테마 미리보기",
+                desc: "프리셋 팔레트를 선택하면 새 색상이 적용된 사이트 모습을 미리 볼 수 있습니다.",
               },
             ].map(({ icon, title, desc }) => (
               <div
@@ -230,9 +230,17 @@ export default function HomePage() {
         )}
       </main>
 
-      <footer className="border-t border-gray-800 mt-20 py-6 text-center">
+      <footer className="border-t border-gray-800 mt-20 py-8 text-center">
+        <p className="text-sm font-semibold text-gray-400 mb-1">ChromaLens</p>
+        <p className="text-xs text-gray-600 mb-3">Built for UBcare AI Hackathon</p>
         <p className="text-xs text-gray-600">
-          ChromaLens &mdash; Built for AI Hackathon 2026
+          제작자&nbsp;
+          <a
+            href="mailto:codecaffein@ubcare.co.kr"
+            className="text-violet-500 hover:text-violet-400 transition-colors"
+          >
+            codecaffein@ubcare.co.kr
+          </a>
         </p>
       </footer>
     </div>

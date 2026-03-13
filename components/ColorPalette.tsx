@@ -27,17 +27,17 @@ export default function ColorPalette({ colors }: ColorPaletteProps) {
   };
 
   const categoryLabels: Record<ExtractedColor["category"], string> = {
-    primary: "Primary",
-    secondary: "Secondary",
-    background: "Background",
-    text: "Text",
-    accent: "Accent",
+    primary: "주요색",
+    secondary: "보조색",
+    background: "배경",
+    text: "텍스트",
+    accent: "강조색",
   };
 
   return (
     <div className="w-full">
       <div className="flex items-center justify-between mb-4">
-        <h2 className="text-lg font-semibold text-gray-200">Extracted Colors</h2>
+        <h2 className="text-lg font-semibold text-gray-200">추출된 색상</h2>
         <div className="flex gap-1 bg-gray-800 rounded-lg p-1">
           {(["hex", "rgb", "hsl"] as ColorFormat[]).map((f) => (
             <button

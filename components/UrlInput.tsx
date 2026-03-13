@@ -50,7 +50,7 @@ export default function UrlInput({ onSubmit, isLoading }: UrlInputProps) {
               type="text"
               value={url}
               onChange={(e) => setUrl(e.target.value)}
-              placeholder="Enter website URL (e.g. github.com)"
+              placeholder="웹사이트 URL 입력 (예: github.com)"
               className="w-full pl-10 pr-4 py-3 bg-gray-800 border border-gray-700 rounded-xl text-gray-100 placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-violet-500 focus:border-transparent transition-all"
               disabled={isLoading}
               autoFocus
@@ -82,17 +82,17 @@ export default function UrlInput({ onSubmit, isLoading }: UrlInputProps) {
                     d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"
                   />
                 </svg>
-                Analyzing...
+                분석 중...
               </span>
             ) : (
-              "Analyze"
+              "분석"
             )}
           </button>
         </div>
       </form>
 
       <div className="mt-3 flex flex-wrap gap-2 justify-center">
-        <span className="text-xs text-gray-500">Try:</span>
+        <span className="text-xs text-gray-500">예시:</span>
         {EXAMPLE_URLS.map((example) => (
           <button
             key={example}
