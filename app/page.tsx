@@ -7,6 +7,7 @@ import ColorPalette from "@/components/ColorPalette";
 import ColorWheel from "@/components/ColorWheel";
 import PaletteSelector from "@/components/PaletteSelector";
 import SitePreview from "@/components/SitePreview";
+import BeforeAfterSlider from "@/components/BeforeAfterSlider";
 
 type AppState = "idle" | "loading" | "success" | "error";
 
@@ -16,12 +17,14 @@ export default function HomePage() {
   const [errorMessage, setErrorMessage] = useState<string>("");
   const [selectedPalette, setSelectedPalette] = useState<PresetPalette | null>(null);
   const [activeTab, setActiveTab] = useState<"palette" | "wheel" | "preview">("palette");
+  const [processedScreenshot, setProcessedScreenshot] = useState<string | null>(null);
 
   const handleUrlSubmit = async (url: string) => {
     setState("loading");
     setResult(null);
     setErrorMessage("");
     setSelectedPalette(null);
+    setProcessedScreenshot(null);
 
     try {
       const response = await fetch("/api/extract", {
@@ -140,12 +143,20 @@ export default function HomePage() {
               </div>
               {result.screenshot && (
                 <div className="border-t border-gray-700/50">
-                  {/* eslint-disable-next-line @next/next/no-img-element */}
-                  <img
-                    src={result.screenshot}
-                    alt={`${result.url} 스크린샷`}
-                    className="w-full object-cover object-top max-h-[480px]"
-                  />
+                  {activeTab === "preview" && processedScreenshot ? (
+                    <BeforeAfterSlider
+                      before={result.screenshot}
+                      after={processedScreenshot}
+                      afterLabel={selectedPalette?.name}
+                    />
+                  ) : (
+                    // eslint-disable-next-line @next/next/no-img-element
+                    <img
+                      src={result.screenshot}
+                      alt={`${result.url} 스크린샷`}
+                      className="w-full object-cover object-top max-h-[480px]"
+                    />
+                  )}
                 </div>
               )}
             </div>
@@ -186,17 +197,18 @@ export default function HomePage() {
 
             {activeTab === "preview" && (
               <div className="space-y-6">
-                <PaletteSelector
-                  selectedPaletteId={selectedPalette?.id ?? null}
-                  onSelect={setSelectedPalette}
-                />
                 {selectedPalette && (
                   <SitePreview
                     originalColors={result.colors}
                     selectedPalette={selectedPalette}
                     screenshot={result.screenshot}
+                    onProcessed={setProcessedScreenshot}
                   />
                 )}
+                <PaletteSelector
+                  selectedPaletteId={selectedPalette?.id ?? null}
+                  onSelect={setSelectedPalette}
+                />
               </div>
             )}
           </div>
