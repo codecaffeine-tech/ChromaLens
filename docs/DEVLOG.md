@@ -27,7 +27,7 @@
 ### Phase 2: 핵심 로직 구현
 
 **색상 추출 엔진** (`lib/colorExtractor.ts`, `lib/colorUtils.ts`):
-- Puppeteer로 실제 브라우저 렌더링 → 모든 DOM 요소의 `getComputedStyle`에서 색상 수집
+- Puppeteer로 실제 브라우저 렌더링 → 모든 DOM 요소의 `getComputedStyle`에서 색상 수집 (11개 CSS 프로퍼티)
 - CSS 스타일시트에서 HEX/RGB/HSL/명칭 색상 정규표현식 추출 (정적 CSS 보완)
 - 가중 유클리드 거리(인간 시각 모델)로 유사 색상 병합 (임계값 25)
 
@@ -50,7 +50,7 @@
 
 **완료**:
 - [x] `app/page.tsx` — 상태 기계 (idle/loading/success/error) + 탭 네비게이션
-- [x] `components/UrlInput.tsx` — URL 입력 폼, 예시 사이트 바로가기
+- [x] `components/UrlInput.tsx` — URL 입력 폼, 예시 사이트 바로가기 (naver.com, kakao.com, toss.im, coupang.com)
 - [x] `components/ColorPalette.tsx` — 카테고리별 스워치 그리드, 비율 바, HEX/RGB/HSL 복사
 - [x] `components/ColorWheel.tsx` — Canvas API 기반 HSL 색상환 (점 크기 = 사용 빈도)
 - [x] `components/PaletteSelector.tsx` — 10가지 테마 카드 선택 UI
@@ -71,19 +71,24 @@
 - `Int32Array` 플랫 배열 + 제곱 거리 비교(sqrt 제거)로 ~92만 픽셀 처리 최적화
 - 임계값 40px 이내 픽셀만 치환하여 사진·그라디언트 보존
 
-**카테고리별 체크박스 색상 선택**:
-- 색상 매핑 항목별 체크박스 추가 — 체크된 카테고리만 Canvas 치환에 포함
-- 체크 해제 즉시 재처리, 상단 스크린샷까지 실시간 반영
+**Before/After 슬라이더**:
+- `components/BeforeAfterSlider.tsx` 구현 — 드래그로 원본과 테마 적용본 비교
+- 상단 스크린샷 영역을 슬라이더가 덮도록 구조 개편 (테마 미리보기 탭 선택 시 활성화)
+- 레이블 순서 수정: 왼쪽 = 테마 적용본, 오른쪽 = 원본 (직관적 방향)
+- 슬라이더 핸들 가시성 개선: 테두리 + 두꺼운 구분선
+
+**파비콘 추가**:
+- Violet/Pink 그라디언트 "C" 아이콘을 SVG로 생성하여 `app/icon.svg`로 등록
 
 **완료**:
 - [x] PNG 무손실 스크린샷 캡처
 - [x] Canvas 픽셀 색상 교체 (테마 미리보기 탭 ↔ 원본 탭 전환 연동)
-- [x] 카테고리별 체크박스 선택적 색상 적용
-- [x] 팔레트 카테고리 계층 순서 확정: 주요색 > 강조색 > 보조색 > 배경색 > 텍스트
+- [x] Before/After 슬라이더 (원본/테마 비교)
+- [x] 파비콘 추가
 
 ---
 
-### Phase 5: 검증 및 마무리
+### Phase 5: 검증 및 배포
 
 **문제**: 개발 서버 좀비 프로세스 누적으로 포트 3000~3004가 모두 점유됨
 **원인**: 각 세션마다 `npm run dev` 백그라운드 실행 후 미종료
@@ -92,11 +97,65 @@
 **문제**: API가 `text/html` 응답을 JSON으로 파싱 시도하여 "Unexpected token '<'" 오류
 **해결**: 클라이언트에서 `Content-Type` 헤더 사전 검사 후 JSON 파싱. API 라우트의 JSON 파싱 오류를 별도 try/catch로 분리.
 
+**CVE 보안 패치**: Next.js 14.2.20 → 14.2.35 (CVE-2025-55184, CVE-2025-67779)
+
 **완료**:
-- [x] E2E 검증: naver.com 분석 → 20색 추출 → 스크린샷 캡처 → 카테고리 계층 표시
+- [x] E2E 검증: naver.com 분석 → 색상 추출 → 스크린샷 캡처 → 카테고리 계층 표시
 - [x] `npm run build` 프로덕션 빌드 성공 확인
-- [x] GitHub Actions CI/CD 파이프라인 구축 및 브랜치 연결
+- [x] GitHub Actions CI/CD 파이프라인 구축 (lint → unit test → build → E2E)
+- [x] Dockerfile 작성 (node:20-slim + chromium) 및 Railway 배포 설정
 - [x] 커버리지 측정 설정 (`@vitest/coverage-v8`, lcov 리포트)
+
+---
+
+### Phase 6: UX 개선 — 다크 테마 & 팔레트 정제
+
+**다크/라이트 테마 전환**:
+- `ThemeToggle.tsx` 컴포넌트 구현 — 헤더 우측 배치
+- `next-themes` 패키지 사용 시도 → `useTheme()` 가 App Router 환경에서 `undefined` 반환 (hydration 불일치)
+- **해결**: `next-themes` 완전 제거, 수동 DOM 접근으로 대체
+  - `ThemeToggle.tsx`: `document.documentElement.classList.toggle("dark")` + `localStorage` 저장
+  - `app/layout.tsx`: `<head>` 내 인라인 `<script>`로 localStorage 값 읽어 첫 페인트 전 클래스 적용 (FOUT 방지)
+- 다크 테마를 앱 기본값으로 설정 (`<html className="dark">`)
+
+**추출 색상 과잉 문제 해결**:
+- 문제: 단일 사이트에서 20~30개 색상이 추출되어 노이즈가 많아 팔레트 가독성 저하
+- **카테고리별 2차 병합** (`secondPassMerge`) 추가:
+  - 1차 병합 후 카테고리별 다른 임계값 적용 (background/text: 60, secondary: 50, primary: 35, accent: 25)
+  - 같은 카테고리 내에서만 병합 → 배경색끼리, 텍스트색끼리 집중적으로 합침
+  - 브랜드 강조색(accent) 은 가장 보수적 임계값으로 고유성 보존
+- **카테고리당 최대 5개 제한** (`getDisplayColors` in `page.tsx`): 전체 최대 25개로 상한
+- **SitePreview 매핑 순서 동기화**: 색상 표시 순서(CATEGORY_ORDER)와 동일한 순서로 팔레트 매핑 → 시각적 일관성 확보
+
+**프리셋 팔레트 트렌드 업데이트** (`lib/palettes.ts`):
+- 기존: Gruvbox, Material 등 오래된 팔레트
+- 변경: Linear, Vercel, Midnight, Bento, Crème + Nord, Catppuccin Mocha, Rosé Pine, Dracula, Everforest
+- 선정 기준: 2024-2025 주요 SaaS/개발도구에서 실제 사용 중인 팔레트
+
+**완료**:
+- [x] 다크 테마 기본 적용 + 수동 토글
+- [x] 2-pass 카테고리 인식 색상 병합
+- [x] 카테고리당 최대 5개 색상 제한
+- [x] 10가지 트렌디 프리셋 팔레트로 교체
+- [x] SitePreview 매핑 순서 정렬
+
+---
+
+### Phase 7: E2E 테스트 수정 및 최종 안정화
+
+**문제**: Playwright strict mode violation — `getByText("ChromaLens")`가 `<h1>`과 footer `<p>` 두 곳에 매칭
+**해결**: `getByRole("heading", { name: "ChromaLens" })`으로 변경
+
+**문제**: `getByText("색상환")`이 feature card 단락, 탭 버튼, ColorWheel `<h2>` 세 곳에 매칭
+**해결**: `getByRole("heading", { name: "색상환" })`으로 변경
+
+**문제**: Playwright가 내장 브라우저 다운로드 실패 (SSL cert)
+**해결**: `playwright.config.ts`에 `launchOptions.executablePath`로 시스템 Chrome 경로 지정
+
+**완료**:
+- [x] E2E 9/9 테스트 전부 통과
+- [x] Playwright 시스템 Chrome 경로 설정
+- [x] 문서 최종 업데이트 (README, CLAUDE.md, DEVLOG.md)
 
 ---
 
@@ -106,6 +165,17 @@
 |---|---|---|
 | Puppeteer | fetch + CSS 파싱 | JS 렌더링 후 computed style 캡처 필요 |
 | Canvas API | D3.js | 단순 색상환에 80KB 라이브러리 불필요 |
-| Mock UI → Canvas 픽셀 교체 | iframe | CSP 헤더로 iframe 차단되는 사이트 대부분 |
+| Canvas 픽셀 교체 | iframe | CSP 헤더로 iframe 차단되는 사이트 대부분 |
 | PNG 스크린샷 | JPEG | 무손실이어야 정확한 픽셀 색상 매칭 가능 |
 | 색상 그룹핑 임계값 25 | 15 또는 40 | 15: 유사 변형 과잉 보존 / 40: 구별되는 브랜드 색 합병 |
+| 수동 테마 토글 | next-themes | App Router hydration에서 `useTheme()` 값이 `undefined` |
+| 2-pass 카테고리 병합 | 단일 임계값 | 배경색(60)과 브랜드색(25)의 병합 기준이 근본적으로 다름 |
+| 카테고리당 5개 상한 | 상한 없음 | 20~30개 추출 시 팔레트 UI 과부하, 의미 있는 색상만 표시 |
+
+## 테스트 현황
+
+| 테스트 유형 | 파일 | 결과 |
+|---|---|---|
+| Vitest 단위 테스트 | `tests/unit/` | 50/50 통과 |
+| Playwright E2E | `tests/e2e/main.spec.ts` | 9/9 통과 |
+| CI/CD (GitHub Actions) | `.github/workflows/ci.yml` | lint + test + build 자동화 |
