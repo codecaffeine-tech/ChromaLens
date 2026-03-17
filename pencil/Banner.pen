@@ -1,0 +1,427 @@
+{
+  "version": "2.8",
+  "children": [
+    {
+      "type": "frame",
+      "id": "bi8Au",
+      "x": 149,
+      "y": 92,
+      "name": "ChromaLens Banner",
+      "clip": true,
+      "width": 1282,
+      "height": 720,
+      "fill": "#080810",
+      "layout": "none",
+      "children": [
+        {
+          "type": "frame",
+          "id": "MjscW",
+          "x": 0,
+          "y": 0,
+          "name": "bgLayer",
+          "width": 1280,
+          "height": 720,
+          "fill": {
+            "type": "image",
+            "enabled": true,
+            "url": "./images/generated-1773653667985.png",
+            "mode": "fill"
+          }
+        },
+        {
+          "type": "frame",
+          "id": "XNCGB",
+          "x": 0,
+          "y": 0,
+          "name": "overlayLayer",
+          "width": 1280,
+          "height": 720,
+          "fill": {
+            "type": "gradient",
+            "gradientType": "radial",
+            "enabled": true,
+            "rotation": 0,
+            "size": {
+              "width": 0.9,
+              "height": 0.9
+            },
+            "colors": [
+              {
+                "color": "#08081000",
+                "position": 0
+              },
+              {
+                "color": "#08081000",
+                "position": 0.3
+              },
+              {
+                "color": "#080810AA",
+                "position": 1
+              }
+            ]
+          }
+        },
+        {
+          "type": "frame",
+          "id": "TH1b6",
+          "x": 0,
+          "y": 0,
+          "name": "contentLayer",
+          "width": 1280,
+          "height": 720,
+          "layout": "vertical",
+          "gap": 22,
+          "justifyContent": "center",
+          "alignItems": "center",
+          "children": [
+            {
+              "type": "frame",
+              "id": "4OyIM",
+              "name": "logoFrame",
+              "width": 96,
+              "height": 96,
+              "fill": {
+                "type": "gradient",
+                "gradientType": "angular",
+                "enabled": true,
+                "rotation": 0,
+                "size": {
+                  "width": 1,
+                  "height": 1
+                },
+                "colors": [
+                  {
+                    "color": "#8b5cf6",
+                    "position": 0
+                  },
+                  {
+                    "color": "#3b82f6",
+                    "position": 0.2
+                  },
+                  {
+                    "color": "#06b6d4",
+                    "position": 0.35
+                  },
+                  {
+                    "color": "#22c55e",
+                    "position": 0.5
+                  },
+                  {
+                    "color": "#eab308",
+                    "position": 0.65
+                  },
+                  {
+                    "color": "#ef4444",
+                    "position": 0.8
+                  },
+                  {
+                    "color": "#ec4899",
+                    "position": 0.92
+                  },
+                  {
+                    "color": "#8b5cf6",
+                    "position": 1
+                  }
+                ]
+              },
+              "cornerRadius": 48,
+              "layout": "none",
+              "children": [
+                {
+                  "type": "frame",
+                  "id": "VIbFn",
+                  "x": 12,
+                  "y": 12,
+                  "name": "logoInner",
+                  "width": 72,
+                  "height": 72,
+                  "fill": "#080810",
+                  "cornerRadius": 36,
+                  "justifyContent": "center",
+                  "alignItems": "center",
+                  "children": [
+                    {
+                      "type": "icon_font",
+                      "id": "bCvgx",
+                      "name": "logoIcon",
+                      "width": 36,
+                      "height": 36,
+                      "iconFontName": "aperture",
+                      "iconFontFamily": "lucide",
+                      "fill": "#FFFFFF"
+                    }
+                  ]
+                }
+              ]
+            },
+            {
+              "type": "text",
+              "id": "1PWEq",
+              "name": "titleText",
+              "fill": "#FFFFFF",
+              "effect": {
+                "type": "shadow",
+                "shadowType": "outer",
+                "color": "#000000CC",
+                "offset": {
+                  "x": 0,
+                  "y": 2
+                },
+                "blur": 40
+              },
+              "content": "ChromaLens",
+              "fontFamily": "GC",
+              "fontSize": 104,
+              "fontWeight": "700",
+              "letterSpacing": -3
+            },
+            {
+              "type": "text",
+              "id": "1iuBi",
+              "name": "tagline",
+              "fill": "#FFFFFFD0",
+              "effect": {
+                "type": "shadow",
+                "shadowType": "outer",
+                "color": "#000000AA",
+                "offset": {
+                  "x": 0,
+                  "y": 1
+                },
+                "blur": 16
+              },
+              "content": "URL 입력 하나로 웹사이트의 모든 색상을 추출하고 분석합니다",
+              "fontFamily": "GC",
+              "fontSize": 20,
+              "fontWeight": "700"
+            },
+            {
+              "type": "frame",
+              "id": "kFZ63",
+              "name": "spectrumBar",
+              "width": 480,
+              "height": 3,
+              "fill": {
+                "type": "gradient",
+                "gradientType": "linear",
+                "enabled": true,
+                "rotation": 90,
+                "size": {
+                  "height": 1
+                },
+                "colors": [
+                  {
+                    "color": "#8b5cf6",
+                    "position": 0
+                  },
+                  {
+                    "color": "#3b82f6",
+                    "position": 0.2
+                  },
+                  {
+                    "color": "#06b6d4",
+                    "position": 0.4
+                  },
+                  {
+                    "color": "#22c55e",
+                    "position": 0.6
+                  },
+                  {
+                    "color": "#eab308",
+                    "position": 0.8
+                  },
+                  {
+                    "color": "#ef4444",
+                    "position": 1
+                  }
+                ]
+              },
+              "cornerRadius": 2
+            },
+            {
+              "type": "frame",
+              "id": "drfD7",
+              "name": "pillRow",
+              "gap": 12,
+              "children": [
+                {
+                  "type": "frame",
+                  "id": "L2bT3",
+                  "name": "pill1",
+                  "fill": "#FFFFFF18",
+                  "cornerRadius": 20,
+                  "stroke": {
+                    "align": "inside",
+                    "thickness": 1,
+                    "fill": "#FFFFFF35"
+                  },
+                  "padding": [
+                    8,
+                    18
+                  ],
+                  "children": [
+                    {
+                      "type": "text",
+                      "id": "RFNzk",
+                      "name": "t1",
+                      "fill": "#FFFFFFCC",
+                      "content": "팔레트",
+                      "fontFamily": "GC",
+                      "fontSize": 13,
+                      "fontWeight": "500"
+                    }
+                  ]
+                },
+                {
+                  "type": "frame",
+                  "id": "xJohR",
+                  "name": "pill2",
+                  "fill": "#FFFFFF18",
+                  "cornerRadius": 20,
+                  "stroke": {
+                    "align": "inside",
+                    "thickness": 1,
+                    "fill": "#FFFFFF35"
+                  },
+                  "padding": [
+                    8,
+                    18
+                  ],
+                  "children": [
+                    {
+                      "type": "text",
+                      "id": "yw9WI",
+                      "name": "t2",
+                      "fill": "#FFFFFFCC",
+                      "content": "색상환",
+                      "fontFamily": "GC",
+                      "fontSize": 13,
+                      "fontWeight": "500"
+                    }
+                  ]
+                },
+                {
+                  "type": "frame",
+                  "id": "yvlR0",
+                  "name": "pill3",
+                  "fill": "#FFFFFF18",
+                  "cornerRadius": 20,
+                  "stroke": {
+                    "align": "inside",
+                    "thickness": 1,
+                    "fill": "#FFFFFF35"
+                  },
+                  "padding": [
+                    8,
+                    18
+                  ],
+                  "children": [
+                    {
+                      "type": "text",
+                      "id": "4VUTQ",
+                      "name": "t3",
+                      "fill": "#FFFFFFCC",
+                      "content": "테마 미리보기",
+                      "fontFamily": "GC",
+                      "fontSize": 13,
+                      "fontWeight": "500"
+                    }
+                  ]
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "type": "frame",
+      "id": "3I2JO",
+      "x": 4140,
+      "y": 0,
+      "name": "04-theme-preview",
+      "width": 1280,
+      "height": 720,
+      "fill": "#0f0f1a",
+      "layout": "vertical",
+      "gap": 32,
+      "justifyContent": "center",
+      "alignItems": "center",
+      "children": [
+        {
+          "type": "frame",
+          "id": "zNiDy",
+          "name": "cap4badge",
+          "fill": "#1a1a2e",
+          "cornerRadius": 20,
+          "padding": [
+            6,
+            16
+          ],
+          "children": [
+            {
+              "type": "text",
+              "id": "qNod2",
+              "name": "cap4text",
+              "fill": "#22c55e",
+              "content": "테마 미리보기 Before/After",
+              "fontFamily": "Inter",
+              "fontSize": 18,
+              "fontWeight": "semibold"
+            }
+          ]
+        },
+        {
+          "type": "frame",
+          "id": "R3zPn",
+          "name": "screen4",
+          "width": 1000,
+          "height": 520,
+          "fill": {
+            "type": "image",
+            "enabled": true,
+            "url": "./images/generated-1773653171279.png",
+            "mode": "fill"
+          },
+          "cornerRadius": 16,
+          "effect": {
+            "type": "shadow",
+            "shadowType": "outer",
+            "color": "#22c55e20",
+            "offset": {
+              "x": 0,
+              "y": 24
+            },
+            "blur": 80
+          }
+        }
+      ]
+    }
+  ],
+  "fonts": [
+    {
+      "name": "GC",
+      "url": "images\\GC120.ttf"
+    },
+    {
+      "name": "GC",
+      "url": "images\\GC110.ttf",
+      "weight": 300
+    },
+    {
+      "name": "GC",
+      "url": "images\\GC130.ttf",
+      "weight": 500
+    },
+    {
+      "name": "GC",
+      "url": "images\\GC140.ttf",
+      "weight": 700
+    },
+    {
+      "name": "GC",
+      "url": "images\\GC150.ttf",
+      "weight": 800
+    }
+  ]
+}
